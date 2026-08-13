@@ -41,7 +41,9 @@ il est documenté à part en §12 et **ne doit pas servir de cible**.
 
 Deux gabarits de page :
 
-* **Page 1** — en-tête + titre 20 pt + sous-titre + bande O/P/R + cartes d'étape à partir de y = 195.10
+* **Page 1** — en-tête + titre 20 pt + sous-titre + bande O/P/R + cartes d'étape.
+  La bande O/P/R étant de hauteur variable (§6), le haut de la première rangée de cartes
+  vaut « bas de la bande + 12.95 » : y = 195.10 sur la fiche Devis, 203.60 sur DATEC.
 * **Pages suivantes** — en-tête + titre 17.5 pt + sous-titre + cartes d'étape à partir de y = 118.60
 
 ---
@@ -76,9 +78,9 @@ embarquée dans les fiches de référence.
 | Sous-titre de page | Book | **8.5** | `#5A6A80` | sommet y 104.66 (p.1) / 101.71 (suites) |
 | Label O / P / R | Bold | **8.5** | couleur du bloc | |
 | Corps O / P / R | Book | **7** | `#14213D` | interligne 8.55 |
-| Titre d'étape | Bold | **10** | `#263F8B` | |
+| Titre d'étape | Bold | **10** | `#263F8B` | 10.5 sur une carte pleine largeur |
 | Label `ACTION` | Bold | **7** | `#159FD0` | toujours en capitales |
-| Corps d'étape | Book | **7.5** | `#14213D` | interligne 9.15 |
+| Corps d'étape | Book | **7.5** | `#14213D` | interligne 9.15 ; 8 pt / 9.75 sur une carte pleine largeur |
 | Label d'encart | Bold | **7** | `#159FD0` (info) / `#263F8B` (important) | capitales |
 | Corps d'encart | Book | **7** | `#14213D` | interligne 8.15 |
 | Exemple illustré | **Oblique** | **6.5** | `#5A6A80` | interligne 7.55 |
@@ -89,8 +91,8 @@ embarquée dans les fiches de référence.
 | Titre VALIDATION FINALE | Bold | **9.5** | `#263F8B` | |
 | Items VALIDATION FINALE | Book | **7.5** | `#14213D` | interligne 9.6 |
 | Pied de page | Book | **7.5** | `#FFFFFF` | |
-| Badge « FICHE PROCÉDURE » | Bold | **11.5** | `#FFFFFF` | |
-| Badge « SUPPORT & OUTILS » | Book | **7.7** | `#FFFFFF` | |
+| Badge « FICHE PROCÉDURE » | Bold | 8.35 | `#FFFFFF` | bitmap, police non-DejaVu (§4) |
+| Badge « SUPPORT & OUTILS » | Book | 5.45 | `#FFFFFF` | bitmap, police non-DejaVu (§4) |
 
 ---
 
@@ -113,13 +115,18 @@ Le lettrage « optimium », la baseline « SOLUTIONS, SERVICES, / INFOGERANCE IN
 **et le suffixe « NC »** sont contenus dans le même fichier image : c'est un asset unique,
 il n'y a pas de bloc « NC » composé séparément.
 
-> Exception : dans la variante Copypark (§11) le « NC » est du texte composé
+> Exception : dans la variante Copypark (§12) le « NC » est du texte composé
 > (DejaVu Sans Bold 11 pt `#159FD0`, à droite de la baseline). Le rendu final est identique.
 
 **Badge** — image bitmap 709 × 177 px, posée en 170.10 × 42.50 pt à (634.45, 18.35).
-Rectangle à coins arrondis plein `#263F8B`, deux lignes centrées :
-`FICHE PROCÉDURE` (Bold 11.5, blanc) puis `SUPPORT & OUTILS` (Book 7.7, blanc).
-En vectoriel (variante Copypark) : rayon d'arrondi ≈ 10 pt.
+Rectangle à coins arrondis plein `#263F8B` (rayon mesuré ≈ 10 pt), deux lignes centrées.
+
+Le texte du badge **n'est pas composé en DejaVu** : à hauteur de capitale mesurée
+(6.60 pt pour la 1re ligne, 3.84 pt pour la 2nde), DejaVu Bold donnerait 95.2 pt de
+large là où l'image en fait 87.84 — la police d'origine est plus étroite. Le badge
+doit donc être réemployé **tel quel** ; le recomposer le ferait diverger.
+Cotes de repli, si l'asset venait à manquer : `FICHE PROCÉDURE` Bold 8.35 pt,
+sommet des capitales à +9.08 ; `SUPPORT & OUTILS` Book 5.45 pt, sommet à +24.56.
 
 ---
 
@@ -151,18 +158,18 @@ Identification de la pièce, chiffrage, création…    ← Book 8.5, #5A6A80
 
 | Propriété | Valeur |
 |---|---|
-| Hauteur du bloc | 61.55 pt (y 120.60 → 182.15) — **fixe** |
-| Largeur d'une cellule | 252.15 pt |
+| Hauteur du bloc | **variable** : 35.90 + 8.55 × nombre de lignes de la cellule la plus longue (61.55 pour 3 lignes, 70.05 pour 4) |
+| Largeur d'une cellule | 252.15 (1re) / 252.25 (2e et 3e) pt |
 | Gouttière | 14.15 pt |
 | Fond | `#F5F8FC` |
 | Bordure | `#CBD9E8`, 1.0 pt |
 | Pastille | cercle Ø **20.4** pt à (cellule.x0 + 16.50, 127.00) |
 | Couleur pastille | O `#263F8B` · P `#159FD0` · R `#178653` |
 | Lettre de pastille | Bold 8.5, blanc, centrée |
-| Label | Bold 8.5, sommet y 139.56, x ≈ cellule.x0 + 46 |
+| Label | Bold 8.5, sommet y 139.56, x = cellule.x0 + 46.05 + indentation de 2 espaces (§7.4) |
 | Couleur label | OBJECTIF `#263F8B` · PRÉREQUIS `#159FD0` · RÉSULTAT `#178653` |
 | Corps | Book 7 `#14213D`, x = cellule.x0 + 7.55, 1re ligne y 151.45, interligne 8.55 |
-| Capacité | 3 lignes de corps max dans la hauteur fixe |
+| Largeur de texte | cellule − 2 × 7.55 ; l'encadrement mesuré donne 234.50 < W < 242.58 |
 
 Les liens présents dans le corps (ex. « HP PartSurfer », « Lenovo Support ») sont en
 `#159FD0` soulignés (filet 0.4 pt).
@@ -173,11 +180,18 @@ Les liens présents dans le corps (ex. « HP PartSurfer », « Lenovo Support »
 
 ### 7.1 Grille
 
-| Cas | x0 | x1 | Largeur |
-|---|---|---|---|
-| Carte gauche | 19.90 | 405.35 | 385.45 |
-| Carte droite | 419.50 | 805.05 | 385.55 |
-| Carte pleine largeur (étape orpheline en fin de fiche) | 19.90 | 805.05 | 785.15 |
+| Carte | x0 | x1 | Largeur | Retrait gauche du texte | Colonne de texte |
+|---|---|---|---|---|---|
+| Carte gauche | 19.90 | 405.35 | 385.45 | 8.55 | **370.46** |
+| Carte droite | 419.50 | 805.05 | 385.55 | 8.60 | **369.40** |
+| Carte pleine largeur | 19.90 | 805.05 | 785.15 | 8.55 | **770.16** |
+
+Les trois colonnes de texte n'ont pas la même largeur utile : la carte droite est
+1 pt plus étroite que la gauche. Ces valeurs ne sont pas déduites d'un padding
+supposé mais **des coupures de lignes observées** — pour chaque paragraphe, la
+largeur `W` doit satisfaire « la ligne tient » et « le mot suivant ne tient pas ».
+Encadrement obtenu sur les 13 pages : gauche `370.38 < W < 370.54`,
+droite `369.08 < W < 369.73`, pleine largeur `726.45 < W < 771.93`.
 
 * Gouttière horizontale : **14.15 pt**
 * Espacement vertical sous une rangée : **12.95 pt** (mesuré bas de carte → haut du bloc
@@ -189,6 +203,9 @@ Les liens présents dans le corps (ex. « HP PartSurfer », « Lenovo Support »
 * **Les deux cartes d'une même rangée ont la même hauteur** (hauteur = max des deux),
   calée sur le contenu le plus long.
 * Une étape isolée en fin de procédure occupe **toute la largeur** (cf. DATEC étape 9).
+  Dans son unique occurrence, cette carte compose **un cran plus grand** : titre 10.5 pt
+  (au lieu de 10), corps 8 pt (au lieu de 7.5), interligne 9.75. Repris tel quel, mais
+  la règle ne repose que sur cette seule mesure.
 
 ### 7.2 Habillage
 
@@ -243,12 +260,20 @@ Ordre des éléments — **strictement celui-ci**, chacun optionnel sauf `ACTION
 | Pastille n° d'étape | cercle Ø **25.0** pt à (carte.x0 + 17.50, carte.y0 + 9.40) |
 | Couleur pastille | `#263F8B`, numéro en Bold blanc (≈ 9.5 pt) |
 | Le « numéro » peut être alphanumérique | `1`…`12`, mais aussi `H1`, `H2`, `L1`, `L2` (branches) |
-| Titre d'étape | Bold 10 `#263F8B`, x = carte.x0 + **51.60**, sommet = carte.y0 + **25.12** |
-| Padding gauche du contenu | **8.55** pt (texte à carte.x0 + 8.55) |
-| Padding droit du contenu | **10.30** pt |
-| Cadre de capture | bordure `#CBD9E8` **0.75** pt ; largeur image 360 pt (demi-carte), 759.70 pt (pleine largeur) |
+| Titre d'étape | Bold 10 `#263F8B`, **ligne de base fixe à carte.y0 + 34.44** quel que soit le corps |
+| Retrait du titre | x = carte.x0 + 51.60 + *indentation* (voir encadré ci-dessous) |
+| Cadre de capture | bordure `#CBD9E8` **0.75** pt, tracée **par-dessus** l'image ; cadre de carte.x0 + 8.85 à carte.x1 − 11.05 ; retraits internes 3.20 en haut, 2.50 en bas |
+| Largeur d'image | au plus « largeur du cadre − 5.65 » (360 pt en demi-carte, 759.70 en pleine largeur) |
+| Calage horizontal de l'image | **centrée dans le cadre**, sauf les images à la largeur maximale, posées à carte.x0 + 20.35 (soit 8.75 pt à droite du centre, avec un débord de 5.9 pt sur le filet droit) |
 | Interligne corps | 9.15 pt |
-| `RÉSULTAT ATTENDU` | fer à **droite** ; label et texte tous deux en Bold 7 `#178653`, séparés par 2 espaces ; passe à la ligne si trop long (toujours fer à droite) |
+| `RÉSULTAT ATTENDU` | fer à **droite** sur carte.x1 − **8.72** ; label et texte tous deux en Bold 7 `#178653`, séparés par 2 espaces ; passe à la ligne si trop long |
+
+> **Indentation des libellés à pastille.** Dans les fiches d'origine, les titres
+> d'étape, les libellés O/P/R et le titre `VALIDATION FINALE` sont littéralement
+> précédés de **deux espaces**. Le décalage dépend donc du corps :
+> `2 × 0.348145 em` (chasse de l'espace en DejaVu Sans **Bold**). Vérifié sur les
+> quatre corps du corpus : 10 pt → +6.96, 10.5 pt → +7.31, 9.5 pt → +6.61,
+> 8.5 pt → +5.92, à 0.02 pt près des positions de glyphes mesurées.
 
 ---
 
@@ -266,7 +291,7 @@ Ordre des éléments — **strictement celui-ci**, chacun optionnel sauf `ACTION
 | Label | Bold 7 `#159FD0` |
 | Corps | Book 7 `#14213D` |
 | Padding interne | 6.05 pt à gauche, ~2.4 pt en haut |
-| Hauteur | 26.45 pt pour 1 ligne de corps, 34.65 pt pour 2 |
+| Hauteur | **18.35 + 8.15 × nombre de lignes** (26.50 pour 1 ligne, 34.65 pour 2) |
 
 Libellés observés : `DONNÉES VARIABLES`, `DESTINATAIRE`, `CHAMPS À RENSEIGNER`,
 `VALEUR FIXE / DONNÉES VARIABLES`.
@@ -334,11 +359,11 @@ Toujours en **dernier bloc du document**, sous la dernière rangée de cartes.
 | Bordure | `#CBD9E8`, 1.0 pt (pas de filet d'accent supérieur) |
 | Pastille | cercle Ø **26.1** pt à (bloc.x0 + 18.00, bloc.y0 + 8.40), fond `#178653` |
 | Texte pastille | `OK`, Bold blanc |
-| Titre | `VALIDATION FINALE`, Bold 9.5 `#263F8B`, x = bloc.x0 + 53.25, sommet = bloc.y0 + 25.73 |
+| Titre | `VALIDATION FINALE`, Bold 9.5 `#263F8B`, x = bloc.x0 + 53.25 + indentation de 2 espaces, sommet = bloc.y0 + 25.73 |
 | Items | Book 7.5 `#14213D`, x = bloc.x0 + 51.55, 1re ligne à bloc.y0 + 39.79, interligne **9.6** |
 | Séparateur d'items | ` | ` (espace, barre verticale, espace) |
-| Retour à la ligne | les items sont répartis sur plusieurs lignes ; **une ligne ne se termine jamais par un séparateur** |
-| Hauteur | 85.75 pt pour 4 lignes (Devis), 76.15 pt pour 3 lignes (DATEC) → ≈ 47.0 + 9.6 × n_lignes |
+| Répartition | les lignes sont **composées à la main, par thème**, pas par largeur : la 1re ligne de DATEC ne fait que 325 pt pour 723 disponibles. Le générateur traite donc chaque ligne saisie comme une ligne imprimée, et ne replie que si elle déborde. |
+| Hauteur | **47.35 + 9.60 × nombre de lignes** (85.75 pour 4 lignes, 76.15 pour 3) |
 
 Les items sont des **reformulations condensées** des `RÉSULTAT ATTENDU`, pas leur copie
 littérale (ex. « Le devis est calculé… » → « Devis PDF envoyé »). Ils ne peuvent donc pas
@@ -361,7 +386,7 @@ littérale (ex. « Le devis est calculé… » → « Devis PDF envoyé »). Ils
 | Texte droit | `Version X.X | JJ/MM/AAAA | Page n/N`, Book 7.5 `#FFFFFF`, **fer à droite** sur x = 813.91 |
 | Séparateur | ` | ` |
 
-> 🐞 **Défaut à corriger dans le générateur.** Dans les deux fiches v1.0, les chiffres
+> 🐞 **Défaut corrigé dans le générateur.** Dans les deux fiches v1.0, les chiffres
 > `n` et `N` de « Page n/N » sont composés en **8.5 pt `#14213D`** (bleu nuit) — soit du
 > texte sombre sur fond bleu marine, quasi illisible (visible sur toutes les pages :
 > « Page 1/8 » n'affiche que le `/`). C'est un artefact de champ automatique LibreOffice.
@@ -417,3 +442,20 @@ Le générateur cible la v1.0.
     `POINT D'ARRÊT OBLIGATOIRE`, `CONTRÔLE OBLIGATOIRE`) — jamais dépouillés.
 11. L'apostrophe utilisée est la **typographique `’`**, les guillemets sont les
     **chevrons français `« »` avec espaces insécables**.
+
+---
+
+## 14. Écarts assumés du générateur
+
+Trois points où le générateur s'écarte sciemment des fiches d'origine :
+
+| Point | Fiches d'origine | Générateur | Raison |
+|---|---|---|---|
+| Pagination du pied | chiffres en `#14213D` 8.5 pt sur fond `#263F8B` | tout en blanc 7.5 pt | le texte d'origine est illisible (§11) |
+| Pastilles O/P/R, numéros d'étape, `OK` | images bitmap | cercles vectoriels + texte | identique à l'œil, net à tout zoom |
+| Filet du cadre de capture | tracé sous l'image | tracé par-dessus | garde le filet continu là où l'image déborde |
+
+Le logo et le badge restent les bitmaps d'origine.
+
+Le calage des captures est réglable (`CARD.shot.align`) : `'origine'` reproduit le
+décalage des fiches existantes, `'centre'` centre systématiquement.

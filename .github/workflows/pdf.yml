@@ -1,0 +1,44 @@
+name: Générer les PDF et contrôler la fidélité
+
+on:
+  push:
+    paths: ['content/**', 'docs/**', 'tools/**', '.github/workflows/pdf.yml']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci || npm install
+      - run: npx playwright install --with-deps chromium
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pymupdf numpy
+
+      - name: Générer un PDF par fichier de contenu
+        run: |
+          mkdir -p output
+          for f in content/*.yaml; do
+            node tools/render.mjs "$f" "output/$(basename "${f%.yaml}").pdf"
+          done
+
+      - name: Contrôler la fidélité à la fiche de référence
+        run: |
+          python3 tools/compare.py \
+            output/datec.pdf references/PROCEDURE_PRISE_EN_CHARGE_DATEC.pdf \
+            --out output/diff
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fiches-pdf
+          path: |
+            output/*.pdf
+            output/diff/*.png

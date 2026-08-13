@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Générateur de fiches procédure — Optimium NC</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23263F8B'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='16' font-weight='bold' fill='%23fff' text-anchor='middle'%3EO%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="assets/logo_optimium_nc.jpeg" alt="Optimium NC">
+    <span class="badge">FICHE PROCÉDURE<em>SUPPORT &amp; OUTILS</em></span>
+  </div>
+  <div class="topbar-actions">
+    <button type="button" id="btn-import">Importer un YAML</button>
+    <button type="button" id="btn-export">Exporter le YAML</button>
+    <button type="button" id="btn-preview" class="primary">Aperçu</button>
+    <button type="button" id="btn-pdf" class="primary">Télécharger le PDF</button>
+    <input type="file" id="file-yaml" accept=".yaml,.yml" hidden>
+  </div>
+</header>
+
+<div id="status" class="status" hidden></div>
+
+<main class="layout">
+  <section class="pane form" id="pane-form">
+
+    <fieldset class="card">
+      <legend>Document</legend>
+      <label>Titre de la procédure
+        <input type="text" id="f-titre" placeholder="Prise en charge DATEC">
+      </label>
+      <label>Sous-titre par défaut
+        <input type="text" id="f-sousTitre" placeholder="Constitution, transmission et traçabilité…">
+        <small>Utilisé sur chaque page, sauf si une étape de la page déclare son propre sous-titre.</small>
+      </label>
+      <div class="row">
+        <label>Version
+          <input type="text" id="f-version" placeholder="1.0">
+        </label>
+        <label>Date
+          <input type="text" id="f-date" placeholder="JJ/MM/AAAA">
+        </label>
+        <button type="button" id="btn-bump" class="ghost">Incrémenter</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="card">
+      <legend>Objectif · Prérequis · Résultat</legend>
+      <label><span class="pill pill-navy">O</span> Objectif
+        <textarea id="f-objectif" rows="2"></textarea>
+      </label>
+      <label><span class="pill pill-cyan">P</span> Prérequis
+        <textarea id="f-prerequis" rows="2"></textarea>
+      </label>
+      <label><span class="pill pill-green">R</span> Résultat
+        <textarea id="f-resultat" rows="2"></textarea>
+      </label>
+    </fieldset>
+
+    <div class="steps-head">
+      <h2>Étapes</h2>
+      <button type="button" id="btn-add-step" class="primary">+ Ajouter une étape</button>
+    </div>
+    <div id="steps"></div>
+
+    <fieldset class="card">
+      <legend>Validation finale</legend>
+      <label class="inline">
+        <input type="checkbox" id="f-validation-actif" checked>
+        Afficher le bloc VALIDATION FINALE
+      </label>
+      <label>Contenu du bloc — une ligne de saisie = une ligne imprimée
+        <textarea id="f-validation-items" rows="5"
+          placeholder="Garantie contrôlée | Modèle vérifié | Référence relevée"></textarea>
+        <small>Séparez les points d'une même ligne par «&nbsp;|&nbsp;». Regroupez-les par
+        thème, comme dans les fiches existantes. Une ligne trop longue est repliée.</small>
+      </label>
+      <button type="button" id="btn-suggest" class="ghost">
+        Pré-remplir depuis les résultats attendus
+      </button>
+    </fieldset>
+
+  </section>
+
+  <section class="pane preview">
+    <div class="preview-head">
+      <span id="preview-info">Aperçu</span>
+    </div>
+    <iframe id="preview-frame" title="Aperçu du PDF"></iframe>
+    <div id="preview-empty" class="preview-empty">
+      Renseignez la fiche puis cliquez sur <strong>Aperçu</strong>.
+    </div>
+  </section>
+</main>
+
+<template id="tpl-step">
+  <fieldset class="card step">
+    <legend>
+      <span class="step-badge" data-role="badge">1</span>
+      <span data-role="legend-title">Étape</span>
+    </legend>
+    <div class="step-tools">
+      <button type="button" data-action="up" title="Monter">↑</button>
+      <button type="button" data-action="down" title="Descendre">↓</button>
+      <button type="button" data-action="remove" title="Supprimer" class="danger">✕</button>
+    </div>
+
+    <div class="row">
+      <label class="narrow">Numéro
+        <input type="text" data-field="numero" placeholder="1, H1, L2…">
+      </label>
+      <label>Titre de l'étape
+        <input type="text" data-field="titre">
+      </label>
+    </div>
+
+    <label>Sous-titre de page (facultatif)
+      <input type="text" data-field="sousTitre">
+      <small>S'applique à la page où commence cette étape.</small>
+    </label>
+
+    <label>Action
+      <textarea data-field="action" rows="3"></textarea>
+    </label>
+
+    <label>Lien direct (facultatif)
+      <input type="text" data-field="lien" placeholder="https://…">
+    </label>
+
+    <div class="capture">
+      <div class="capture-head">
+        <span>Capture d'écran</span>
+        <input type="file" data-role="capture-file" accept="image/png,image/jpeg" hidden>
+        <button type="button" data-action="pick-capture" class="ghost">Choisir une image</button>
+        <button type="button" data-action="clear-capture" class="ghost">Retirer</button>
+      </div>
+      <div class="capture-drop" data-role="capture-drop" tabindex="0">
+        Glissez une image ici, ou collez-la (Ctrl+V) après avoir cliqué dans cette zone.
+      </div>
+      <img data-role="capture-thumb" alt="" hidden>
+      <label class="narrow">Largeur imposée (pt, facultatif)
+        <input type="number" step="0.05" data-field="captureLargeur" placeholder="pleine largeur">
+      </label>
+    </div>
+
+    <div class="callouts">
+      <div class="callouts-head">
+        <span>Encarts</span>
+        <button type="button" data-action="add-callout" class="ghost">+ Encart</button>
+      </div>
+      <div data-role="callouts"></div>
+    </div>
+
+    <label>Exemple illustré (italique, facultatif)
+      <textarea data-field="exemple" rows="2"></textarea>
+    </label>
+
+    <label>Résultat attendu
+      <textarea data-field="resultat" rows="2"></textarea>
+    </label>
+
+    <div class="buttons-block">
+      <div class="callouts-head">
+        <span>Boutons de navigation</span>
+        <button type="button" data-action="add-button" class="ghost">+ Bouton</button>
+      </div>
+      <div data-role="buttons"></div>
+    </div>
+  </fieldset>
+</template>
+
+<template id="tpl-callout">
+  <div class="callout-row">
+    <select data-field="style">
+      <option value="info">Info (bleu clair)</option>
+      <option value="important">Important (bleu marine)</option>
+    </select>
+    <input type="text" data-field="label" placeholder="LIBELLÉ" list="callout-presets">
+    <textarea data-field="texte" rows="2" placeholder="Texte de l'encart"></textarea>
+    <button type="button" data-action="remove-callout" class="danger" title="Supprimer">✕</button>
+  </div>
+</template>
+
+<template id="tpl-button">
+  <div class="button-row">
+    <input type="text" data-field="texte" placeholder="CONTINUER VERS LA DEMANDE D’ACHAT">
+    <input type="text" data-field="cible" placeholder="étape visée (ex. 3)">
+    <input type="text" data-field="url" placeholder="ou URL externe">
+    <button type="button" data-action="remove-button" class="danger" title="Supprimer">✕</button>
+  </div>
+</template>
+
+<datalist id="callout-presets"></datalist>
+
+<script src="js/vendor/pdf-lib.min.js"></script>
+<script src="js/vendor/fontkit.umd.min.js"></script>
+<script src="js/vendor/js-yaml.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

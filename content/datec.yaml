@@ -1,0 +1,113 @@
+# Reconstitution de PROCEDURE_PRISE_EN_CHARGE_DATEC.pdf à partir du générateur.
+# Sert de test de fidélité : `npm run compare` diffe le PDF produit avec l'original.
+titre: Prise en charge DATEC
+sousTitre: Constitution, transmission et traçabilité d’une demande de pièce HP sous garantie.
+version: "1.0"
+date: 30/07/2026
+
+objectif: Constituer une demande DATEC complète pour une pièce HP sous garantie.
+prerequis: >-
+  BI ouvert dans CopyPark ; numéro de série et numéro produit ; accès au site de garantie HP ;
+  accès à HP PartSurfer ; modèle Word DATEC ; accès à Outlook ; photo de la panne lorsqu’elle
+  est visuelle.
+resultat: >-
+  La demande DATEC est transmise avec les justificatifs nécessaires, la pièce est saisie dans
+  CopyPark et le BI peut être clôturé.
+
+etapes:
+  - numero: 1
+    titre: Relever les informations du BI
+    capture: { fichier: assets/datec/etape-01.png, largeur: 289.15 }
+    action: >-
+      Dans CopyPark, ouvrir le BI concerné. Relever le numéro du BI, le client, le modèle, le
+      numéro de série, le numéro produit et la description de la panne. Si la panne est visuelle,
+      prendre une photo exploitable et la conserver pour le dossier DATEC.
+    exemple: "Exemple illustré : les valeurs visibles correspondent uniquement au BI n° 206596."
+    resultat: Les informations techniques et les justificatifs nécessaires sont réunis.
+
+  - numero: 2
+    titre: Rechercher la garantie HP
+    capture: { fichier: assets/datec/etape-02.png, largeur: 226.05 }
+    action: >-
+      Ouvrir la page « Contrôle de la garantie officielle HP ». Sélectionner le pays ou la région
+      d’achat, saisir le numéro de série de la machine, puis sélectionner « Soumettre ».
+    resultat: La page contenant les détails de couverture s’affiche.
+
+  - numero: 3
+    titre: Contrôler la couverture et le produit
+    sousTitre: Contrôle de la couverture HP et identification de la pièce.
+    capture: { fichier: assets/datec/etape-03.png }
+    action: >-
+      Vérifier le statut de la couverture, le modèle de la machine, le numéro de série et le
+      numéro produit. Comparer ces informations avec celles du BI et de la machine.
+    exemple: "Exemple illustré : le statut de couverture affiché est « Actif »."
+    resultat: La machine est identifiée et sa couverture HP est confirmée.
+
+  - numero: 4
+    titre: Identifier la pièce dans HP PartSurfer
+    capture: { fichier: assets/datec/etape-04.png }
+    action: >-
+      Dans HP PartSurfer, rechercher le numéro produit de la machine. Identifier la pièce
+      correspondant à la panne, puis relever sa référence et sa désignation exactes.
+    exemple: >-
+      Exemple illustré : numéro produit 81A21EA | référence N45442-051 | désignation
+      SPS-OVERCOVER AVEC KB BL SR FR. Ces valeurs ne s’appliquent qu’au dossier montré.
+    resultat: La référence de remplacement nécessaire à la demande DATEC est identifiée.
+
+  - numero: 5
+    titre: Compléter le document Word DATEC
+    sousTitre: Constitution et transmission du dossier DATEC.
+    capture: { fichier: assets/datec/etape-05.png, largeur: 260.10 }
+    action: >-
+      Ouvrir le modèle Word DATEC et renseigner : File (numéro du BI), Date, Model, SN, PN,
+      Replacement Part, Designation et Symptoms. Rédiger en anglais les symptômes, les contrôles
+      réalisés et le diagnostic technique.
+    resultat: Le document DATEC contient toutes les informations techniques nécessaires.
+
+  - numero: 6
+    titre: Envoyer la demande à Import spare
+    capture: { fichier: assets/datec/etape-06.png }
+    action: >-
+      Créer un e-mail à import.spare@sharp-center.nc. L’objet doit identifier le numéro du BI, le
+      client et la pièce ou la nature de la demande. Joindre le document DATEC, les photos de la
+      panne lorsqu’elles sont nécessaires et uniquement les autres fichiers techniques utiles.
+    resultat: La demande DATEC est transmise avec les pièces jointes nécessaires.
+
+  - numero: 7
+    titre: Ouvrir la saisie des pièces
+    sousTitre: Saisie de la pièce et sortie du stock du technicien dans CopyPark.
+    capture: { fichier: assets/datec/etape-07.png }
+    action: >-
+      Revenir dans le BI CopyPark. Ouvrir l’onglet « Saisie Pièce / M.O. / Dépl. / Relevé », puis
+      sélectionner le bouton « + » de la zone consacrée aux pièces.
+    resultat: La fenêtre d’ajout d’une ligne de pièce s’ouvre.
+
+  - numero: 8
+    titre: Saisir la pièce et sortir le stock
+    capture: { fichier: assets/datec/etape-08.png, largeur: 282.75 }
+    action: >-
+      Dans « Ajout ligne BI », rechercher la référence relevée dans PartSurfer, contrôler
+      l’article, renseigner la quantité, sélectionner la ligne correspondant au stock du
+      technicien, puis contrôler le dépôt et le contrat. Sélectionner « Valider (F2) ».
+    exemple: >-
+      La capture montre une fenêtre non renseignée : aucune référence ni ligne de stock ne doit
+      être recopiée depuis l’illustration.
+    resultat: La pièce est ajoutée au BI et sortie du stock du technicien.
+
+  - numero: 9
+    titre: Clôturer le BI
+    sousTitre: Clôture du BI après vérification complète de la traçabilité.
+    capture: { fichier: assets/datec/etape-09.png }
+    action: >-
+      Vérifier que la demande DATEC a été envoyée, que les justificatifs ont été joints, que la
+      pièce a été saisie et que la sortie du stock du technicien est correcte. Sélectionner
+      « Clôture immédiate », puis valider le BI.
+    resultat: Le BI est clôturé après la traçabilité complète de la demande DATEC et de la pièce.
+
+validation:
+  actif: true
+  # Regroupement thématique repris de la fiche d'origine : une entrée = une ligne rendue.
+  lignes:
+    - Garantie HP contrôlée | Modèle, série et produit vérifiés | Référence PartSurfer relevée
+    - Diagnostic rédigé en anglais | Document DATEC complété | Photos éventuelles jointes
+    - Demande envoyée au service Import spare | Pièce sortie du stock du technicien | BI clôturé
