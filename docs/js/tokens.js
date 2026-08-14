@@ -16,6 +16,34 @@
  */
 export const resolveAsset = (path) => (globalThis.__ASSETS && globalThis.__ASSETS[path]) || path;
 
+export const isDataUri = (value) => typeof value === 'string' && value.startsWith('data:');
+
+/** Décode une data: URI base64 sans passer par le réseau. */
+export function dataUriToBytes(uri) {
+  const binary = atob(uri.slice(uri.indexOf(',') + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+/**
+ * Charge un asset en octets.
+ *
+ * Une data: URI est décodée directement, sans fetch. Ce n'est pas une
+ * optimisation : certains hébergeurs servent la page avec une politique de
+ * sécurité qui interdit « connect-src data: » — l'aperçu HTML de OneDrive et
+ * SharePoint, notamment. Un fetch() y échoue par « Failed to fetch » alors que
+ * tout le reste fonctionne. En décodant nous-mêmes, le générateur ne dépend
+ * plus d'aucune requête pour ses ressources embarquées.
+ */
+export async function fetchAssetBytes(path) {
+  const source = resolveAsset(path);
+  if (isDataUri(source)) return dataUriToBytes(source);
+  const response = await fetch(source);
+  if (!response.ok) throw new Error(`Ressource introuvable : ${path}`);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
 export const COLORS = {
   navy:       '#263F8B', // primaire
   cyan:       '#159FD0', // secondaire

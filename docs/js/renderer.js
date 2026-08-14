@@ -8,7 +8,7 @@
 
 import {
   COLORS, FONT_METRICS, PAGE, HEADER, TITLE, OPR, GRID, CARD, VALIDATION, FOOTER,
-  resolveAsset,
+  fetchAssetBytes,
 } from './tokens.js';
 import { layoutDocument, wrapText, lineBox, baselineFromTop, labelIndent } from './layout.js';
 
@@ -33,11 +33,9 @@ async function loadFonts(pdfDoc, base = '') {
       bold:    `${base}fonts/DejaVuSans-Bold.ttf`,
       italic:  `${base}fonts/DejaVuSans-Oblique.ttf`,
     };
-    const entries = await Promise.all(Object.entries(files).map(async ([key, url]) => {
-      const response = await fetch(resolveAsset(url));
-      if (!response.ok) throw new Error(`Police introuvable : ${url}`);
-      return [key, new Uint8Array(await response.arrayBuffer())];
-    }));
+    const entries = await Promise.all(Object.entries(files).map(
+      async ([key, url]) => [key, await fetchAssetBytes(url)],
+    ));
     fontCache = Object.fromEntries(entries);
   }
   pdfDoc.registerFontkit(window.fontkit);
@@ -215,7 +213,7 @@ function drawOpr(page, fonts, doc, measurer, height) {
   });
 }
 
-async function drawCard(pdfDoc, page, fonts, card, imageCache, stepPages) {
+async function drawCard(pdfDoc, page, fonts, card, imageCache, stepPages, annexPages) {
   const { geom, top, height, blocks } = card;
   const { x0, x1 } = geom;
   const width = x1 - x0;
@@ -309,16 +307,20 @@ async function drawCard(pdfDoc, page, fonts, card, imageCache, stepPages) {
           });
         }
         const rect = [block.x, flip(y + block.height), block.x + block.width, flip(y)];
-        if (block.uri) {
-          addLinkAnnotation(pdfDoc, page, rect,
-            pdfDoc.context.obj({ Type: 'Action', S: 'URI', URI: PDFString.of(block.uri) }));
-        } else if (block.target && stepPages.has(String(block.target))) {
-          const targetPage = pdfDoc.getPage(stepPages.get(String(block.target)));
+        const goTo = (pageIndex) => {
           const dest = PDFArray.withContext(pdfDoc.context);
-          dest.push(targetPage.ref);
+          dest.push(pdfDoc.getPage(pageIndex).ref);
           dest.push(PDFName.of('Fit'));
           addLinkAnnotation(pdfDoc, page, rect,
             pdfDoc.context.obj({ Type: 'Action', S: 'GoTo', D: dest }));
+        };
+        if (block.uri) {
+          addLinkAnnotation(pdfDoc, page, rect,
+            pdfDoc.context.obj({ Type: 'Action', S: 'URI', URI: PDFString.of(block.uri) }));
+        } else if (block.annexeId && annexPages.has(block.annexeId)) {
+          goTo(annexPages.get(block.annexeId));
+        } else if (block.target && stepPages.has(String(block.target))) {
+          goTo(stepPages.get(String(block.target)));
         }
         break;
       }
@@ -422,6 +424,20 @@ export async function renderProcedure(doc, options = {}) {
     });
   });
 
+  // Les pages empruntées à d'autres PDF sont ajoutées à la suite, dans l'ordre des
+  // étapes. On les copie avant de dessiner : les boutons qui y renvoient ont besoin
+  // que les pages cibles existent déjà.
+  const annexPages = new Map();
+  for (const step of doc.etapes ?? []) {
+    for (const annexe of step.annexes ?? []) {
+      if (!annexe.dataUrl || !annexe.id) continue;
+      const source = await PDFDocument.load(annexe.dataUrl);
+      const copied = await pdfDoc.copyPages(source, source.getPageIndices());
+      annexPages.set(annexe.id, pdfDoc.getPageCount());
+      for (const copiedPage of copied) pdfDoc.addPage(copiedPage);
+    }
+  }
+
   for (let i = 0; i < pages.length; i += 1) {
     const spec = pages[i];
     const page = pdfPages[i];
@@ -432,9 +448,11 @@ export async function renderProcedure(doc, options = {}) {
     drawTitle(page, fonts, doc, spec);
     if (spec.first) drawOpr(page, fonts, doc, measurer, oprHeight);
     for (const card of spec.cards) {
-      await drawCard(pdfDoc, page, fonts, card, imageCache, stepPages);
+      await drawCard(pdfDoc, page, fonts, card, imageCache, stepPages, annexPages);
     }
     if (spec.validation) drawValidation(page, fonts, spec.validation);
+    // « Page n/N » ne compte que les pages composées : les annexes viennent d'un
+    // autre document et gardent leur propre pied de page.
     drawFooter(page, fonts, doc, i + 1, pages.length);
   }
 

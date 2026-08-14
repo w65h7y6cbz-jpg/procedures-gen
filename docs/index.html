@@ -29,6 +29,17 @@
   </div>
 </header>
 
+<div id="avertissement" class="avertissement" hidden>
+  <div>
+    <strong>Vous utilisez le générateur depuis un aperçu intégré</strong> (SharePoint, OneDrive,
+    Teams). La création de fiches fonctionne, mais <strong>votre brouillon ne sera pas conservé</strong>
+    si vous fermez l'onglet, et le bouton <em>Télécharger</em> peut rester sans effet — dans ce cas,
+    passez par <em>Voir le PDF</em> puis l'icône de téléchargement du lecteur.
+    <br>Pour un fonctionnement complet, enregistrez ce fichier sur votre poste et ouvrez-le de là.
+  </div>
+  <button type="button" id="btn-fermer-avertissement" title="Masquer">✕</button>
+</div>
+
 <div id="status" class="status" hidden></div>
 
 <nav id="stepper" class="stepper" aria-label="Progression"></nav>
@@ -38,7 +49,10 @@
 <div id="overlay" class="overlay" hidden>
   <div class="overlay-bar">
     <span>Aperçu du PDF</span>
-    <button type="button" id="btn-close-preview">Fermer</button>
+    <span class="overlay-actions">
+      <button type="button" id="btn-open-tab">Ouvrir dans un onglet</button>
+      <button type="button" id="btn-close-preview">Fermer</button>
+    </span>
   </div>
   <iframe id="preview-frame" title="Aperçu du PDF"></iframe>
 </div>
@@ -110,6 +124,7 @@
       <button type="button" data-action="add-exemple">un exemple</button>
       <button type="button" data-action="add-lien">un lien</button>
       <button type="button" data-action="add-bouton">un bouton</button>
+      <button type="button" data-action="add-annexe">une page d'un autre PDF</button>
       <button type="button" data-action="advanced" class="link">options avancées</button>
     </div>
   </section>
@@ -187,6 +202,28 @@
   </div>
 </template>
 
+<template id="tpl-annexe">
+  <div class="extra">
+    <div class="extra-head">
+      <span>Page empruntée à un autre PDF</span>
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+
+    <div data-role="choix">
+      <button type="button" data-action="pick-pdf" class="ghost">Choisir un PDF…</button>
+      <input type="file" data-role="file" accept="application/pdf" hidden>
+    </div>
+
+    <p class="annexe-source" data-role="source" hidden></p>
+    <p class="annexe-aide" data-role="aide" hidden>Cliquez sur la ou les pages à joindre.</p>
+    <div class="pages" data-role="pages" hidden></div>
+
+    <label data-role="libelle-bloc" hidden>Texte du bouton qui renverra vers ces pages
+      <input type="text" data-field="texte" placeholder="VOIR COMMENT VÉRIFIER LA GARANTIE">
+    </label>
+  </div>
+</template>
+
 <template id="tpl-advanced">
   <div class="extra">
     <div class="extra-head">
@@ -216,6 +253,7 @@
 <script src="js/vendor/pdf-lib.min.js"></script>
 <script src="js/vendor/fontkit.umd.min.js"></script>
 <script src="js/vendor/js-yaml.min.js"></script>
+<script src="js/vendor/pdfjs.min.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

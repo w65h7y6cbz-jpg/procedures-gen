@@ -36,7 +36,7 @@ async function dataUri(path) {
  * Les modules sont dans un ordre de dépendance connu et sans cycle : on retire
  * les lignes d'import et le mot-clé export, puis on enveloppe le tout.
  */
-const MODULES = ['tokens.js', 'layout.js', 'renderer.js', 'schema.js', 'app.js'];
+const MODULES = ['tokens.js', 'layout.js', 'renderer.js', 'schema.js', 'annexes.js', 'app.js'];
 
 function flatten(source) {
   return source
@@ -56,11 +56,15 @@ async function main() {
     readText('docs/js/vendor/pdf-lib.min.js'),
     readText('docs/js/vendor/fontkit.umd.min.js'),
     readText('docs/js/vendor/js-yaml.min.js'),
+    readText('docs/js/vendor/pdfjs.min.js'),
   ])).join('\n;\n');
 
   const assetPaths = [
     'fonts/DejaVuSans.ttf', 'fonts/DejaVuSans-Bold.ttf', 'fonts/DejaVuSans-Oblique.ttf',
     'assets/logo_optimium_nc.jpeg', 'assets/badge_fiche_procedure.jpeg',
+    // Le worker pdf.js est chargé depuis un Blob construit à l'exécution : une
+    // data: URI ne peut pas servir directement de source de Worker.
+    'js/vendor/pdfjs.worker.min.js',
   ];
   const assets = Object.fromEntries(await Promise.all(
     assetPaths.map(async (p) => [p, await dataUri(`docs/${p}`)]),

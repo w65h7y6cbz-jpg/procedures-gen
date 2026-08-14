@@ -78,6 +78,16 @@ button.big-btn { padding: 14px 28px; font-size: 16px; }
 .menu button { border: 0; text-align: left; border-radius: 5px; }
 .menu button:hover { background: var(--bg-accent); }
 
+/* ---------------------------------------------------- environnement dégradé */
+
+.avertissement {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 18px; font-size: 13px; line-height: 1.45;
+  background: #FFF6E5; border-bottom: 1px solid #E8CE9B; color: #6B4E12;
+}
+.avertissement > div { flex: 1; }
+.avertissement button { border: 0; background: none; padding: 2px 6px; color: inherit; }
+
 /* --------------------------------------------------------------- statuts */
 
 .status {
@@ -186,6 +196,25 @@ textarea { resize: vertical; }
 .extra > input[type="text"] { margin-bottom: 8px; }
 .extra label { margin: 8px 0; }
 
+/* ------------------------------------------------------------- annexes PDF */
+
+.annexe-source { margin: 8px 0 0; font-size: 12.5px; color: var(--slate); }
+.annexe-aide { margin: 10px 0 6px; font-size: 12.5px; color: var(--navy); font-weight: 700; }
+.pages {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px; margin-bottom: 6px;
+}
+.page-choix {
+  border: 2px solid var(--border); border-radius: var(--radius); background: #fff;
+  padding: 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+  gap: 5px; font-size: 12px; color: var(--slate);
+}
+.page-choix img { display: block; width: 100%; height: auto; }
+.page-choix:hover { border-color: var(--cyan); }
+.page-choix.retenue { border-color: var(--navy); background: var(--bg-accent); color: var(--navy); font-weight: 700; }
+.page-choix.retenue::after { content: '✓ retenue'; }
+.pages-chargement { grid-column: 1 / -1; color: var(--slate); font-size: 13px; padding: 8px; }
+
 .add-row {
   display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
   margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);
@@ -213,6 +242,7 @@ textarea { resize: vertical; }
   display: flex; flex-direction: column; padding: 26px;
 }
 .overlay[hidden] { display: none; }
+.overlay-actions { display: flex; gap: 8px; }
 .overlay-bar {
   display: flex; align-items: center; justify-content: space-between;
   background: #fff; border-radius: var(--radius) var(--radius) 0 0;

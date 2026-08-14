@@ -30,6 +30,12 @@
  *         - texte: HP — OUVRIR LA RECHERCHE
  *           cible: H1           # numéro d'étape visé (lien interne)
  *           url: https://…      # ou lien externe
+ *       annexes:                # facultatif — pages empruntées à un autre PDF
+ *         - id: a1              # identifiant, sert de cible au bouton
+ *           texte: VOIR COMMENT VÉRIFIER LA GARANTIE
+ *           dataUrl: data:application/pdf;base64,…   # les pages retenues
+ *           nbPages: 1
+ *           source: PROCEDURE_DATEC.pdf
  *   validation:
  *     actif: true
  *     lignes:                 # une entrée = une ligne imprimée, points séparés par « | »
@@ -37,7 +43,7 @@
  *     items: [ …, … ]         # variante : liste de points, répartie automatiquement
  */
 
-import { resolveAsset } from './tokens.js';
+import { resolveAsset, isDataUri, fetchAssetBytes } from './tokens.js';
 
 export const CALLOUT_STYLES = [
   { value: 'info', label: 'Info (bleu clair)' },
@@ -68,7 +74,7 @@ export const todayFr = () => {
 export function emptyStep(numero = 1) {
   return {
     numero, titre: '', sousTitre: '', action: '', lien: '',
-    capture: null, encarts: [], exemple: '', resultat: '', boutons: [],
+    capture: null, encarts: [], exemple: '', resultat: '', boutons: [], annexes: [],
   };
 }
 
@@ -100,6 +106,7 @@ export function normalise(raw) {
     ...step,
     encarts: (step.encarts ?? []).map((c) => ({ style: 'info', label: '', texte: '', ...c })),
     boutons: (step.boutons ?? []).map((b) => ({ texte: '', cible: '', url: '', ...b })),
+    annexes: (step.annexes ?? []).map((a) => ({ texte: '', dataUrl: '', nbPages: 0, source: '', ...a })),
     capture: step.capture ? { ...step.capture } : null,
   }));
   if (!doc.etapes.length) doc.etapes = base.etapes;
@@ -127,9 +134,17 @@ export function suggestValidationItems(doc, parLigne = 3) {
 
 /* ------------------------------------------------------------------- YAML */
 
+/**
+ * Sérialise la fiche.
+ * @param {boolean} inlineImages embarque les captures et les annexes dans le
+ *   fichier. Vrai pour un enregistrement depuis l'interface — sans quoi rouvrir
+ *   la fiche la retrouverait sans ses images. Faux pour les fiches de content/,
+ *   dont les captures sont des fichiers versionnés à côté.
+ */
 export function toYaml(doc, { inlineImages = false } = {}) {
   const clone = JSON.parse(JSON.stringify(doc));
   for (const step of clone.etapes ?? []) {
+    if (!step.annexes?.length) delete step.annexes;
     if (!step.capture) { delete step.capture; continue; }
     if (!inlineImages) delete step.capture.dataUrl;
     delete step.capture.width;
@@ -167,7 +182,10 @@ export function measureImage(dataUrl) {
 }
 
 async function fetchAsDataUrl(url) {
-  const response = await fetch(resolveAsset(url));
+  // Un asset embarqué est déjà une data: URI : rien à charger.
+  const source = resolveAsset(url);
+  if (isDataUri(source)) return source;
+  const response = await fetch(source);
   if (!response.ok) throw new Error(`Capture introuvable : ${url}`);
   const blob = await response.blob();
   return readFileAsDataUrl(new File([blob], 'capture', { type: blob.type }));

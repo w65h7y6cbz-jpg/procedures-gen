@@ -10,6 +10,7 @@
  */
 
 import { renderProcedure } from './renderer.js';
+import { ouvrirPdf, vignette, extraire, nouvelId } from './annexes.js';
 import {
   emptyDoc, emptyStep, normalise, suggestValidationItems,
   toYaml, fromYaml, hydrate, readFileAsDataUrl, measureImage, todayFr, CALLOUT_PRESETS,
@@ -41,6 +42,20 @@ function status(message, kind = '') {
 }
 
 /* --------------------------------------------------------------- brouillon */
+
+/**
+ * Le stockage local est refusé dans un cadre bac à sable — c'est le cas de
+ * l'aperçu HTML de SharePoint, OneDrive et Teams. Le générateur y fonctionne,
+ * mais sans conservation du brouillon et souvent sans téléchargement direct :
+ * mieux vaut le dire d'emblée que de perdre le travail de l'utilisateur.
+ */
+const stockageDisponible = (() => {
+  try {
+    localStorage.setItem('procedures-gen:test', '1');
+    localStorage.removeItem('procedures-gen:test');
+    return true;
+  } catch { return false; }
+})();
 
 function saveDraft() {
   try { localStorage.setItem(DRAFT_KEY, JSON.stringify(doc)); }
@@ -175,6 +190,7 @@ function buildEtape(step) {
     if (kind === 'bouton') step.boutons.push({ texte: '', cible: '', url: '' });
     if (kind === 'exemple') step.exemple = step.exemple || ' ';
     if (kind === 'lien') step.lien = step.lien || ' ';
+    if (kind === 'annexe') step.annexes.push({ id: nouvelId(), texte: '', dataUrl: '', nbPages: 0, source: '' });
     if (kind === 'advanced') step.afficherAvance = true;
     drawExtras(node, step);
     saveDraft();
@@ -185,6 +201,7 @@ function buildEtape(step) {
   $('[data-action="add-exemple"]', node).addEventListener('click', () => add('exemple'));
   $('[data-action="add-lien"]', node).addEventListener('click', () => add('lien'));
   $('[data-action="add-bouton"]', node).addEventListener('click', () => add('bouton'));
+  $('[data-action="add-annexe"]', node).addEventListener('click', () => add('annexe'));
   $('[data-action="advanced"]', node).addEventListener('click', () => add('advanced'));
   return node;
 }
@@ -246,6 +263,12 @@ function drawExtras(node, step) {
     host.appendChild(row);
   });
 
+  step.annexes.forEach((annexe, i) => {
+    host.appendChild(buildAnnexe(annexe, () => {
+      step.annexes.splice(i, 1); drawExtras(node, step); saveDraft();
+    }));
+  });
+
   if (step.afficherAvance) {
     const row = $('#tpl-advanced').content.firstElementChild.cloneNode(true);
     const numero = $('[data-field="numero"]', row);
@@ -261,6 +284,100 @@ function drawExtras(node, step) {
     });
     host.appendChild(row);
   }
+}
+
+/* ----------------------------------------------------------- annexes PDF */
+
+/**
+ * Bloc « page empruntée à un autre PDF » : on ouvre un PDF, on clique les pages
+ * voulues, et elles sont extraites dans un petit document conservé avec la fiche.
+ */
+function buildAnnexe(annexe, onRemove) {
+  const row = $('#tpl-annexe').content.firstElementChild.cloneNode(true);
+  const file = $('[data-role="file"]', row);
+  const grille = $('[data-role="pages"]', row);
+  const source = $('[data-role="source"]', row);
+  const aide = $('[data-role="aide"]', row);
+  const libelle = $('[data-role="libelle-bloc"]', row);
+  const champ = $('[data-field="texte"]', row);
+
+  let sourceDataUrl = null;      // le PDF ouvert, gardé le temps du choix
+  let retenues = [];             // numéros de page retenus, à partir de 1
+
+  const majLibelle = () => {
+    libelle.hidden = retenues.length === 0;
+    if (retenues.length && !champ.value.trim()) {
+      champ.value = 'VOIR LA PROCÉDURE';
+      annexe.texte = champ.value;
+    }
+  };
+
+  if (annexe.dataUrl) {
+    source.hidden = false;
+    source.textContent = annexe.nbPages === 1
+      ? `1 page retenue${annexe.source ? ` de « ${annexe.source} »` : ''}.`
+      : `${annexe.nbPages} pages retenues${annexe.source ? ` de « ${annexe.source} »` : ''}.`;
+    libelle.hidden = false;
+  }
+  champ.value = annexe.texte ?? '';
+  champ.addEventListener('input', () => { annexe.texte = champ.value; saveDraft(); });
+
+  const appliquer = async () => {
+    if (!sourceDataUrl || !retenues.length) return;
+    try {
+      annexe.dataUrl = await extraire(sourceDataUrl, [...retenues].sort((a, b) => a - b));
+      annexe.nbPages = retenues.length;
+      source.hidden = false;
+      source.textContent = retenues.length === 1
+        ? `1 page retenue${annexe.source ? ` de « ${annexe.source} »` : ''}.`
+        : `${retenues.length} pages retenues${annexe.source ? ` de « ${annexe.source} »` : ''}.`;
+      majLibelle();
+      saveDraft();
+    } catch (error) {
+      status(`Ces pages n'ont pas pu être extraites : ${error.message}`, 'error');
+    }
+  };
+
+  const ouvrir = async (blob) => {
+    if (!blob) return;
+    annexe.source = blob.name;
+    grille.hidden = false;
+    grille.innerHTML = '<p class="pages-chargement">Ouverture du PDF…</p>';
+    try {
+      sourceDataUrl = await readFileAsDataUrl(blob);
+      const { doc: pdf, nbPages } = await ouvrirPdf(sourceDataUrl);
+      grille.textContent = '';
+      aide.hidden = false;
+      retenues = [];
+      for (let numero = 1; numero <= nbPages; numero += 1) {
+        const bouton = document.createElement('button');
+        bouton.type = 'button';
+        bouton.className = 'page-choix';
+        const img = document.createElement('img');
+        img.alt = `Page ${numero}`;
+        bouton.append(img, document.createTextNode(`Page ${numero}`));
+        bouton.addEventListener('click', () => {
+          const at = retenues.indexOf(numero);
+          if (at >= 0) retenues.splice(at, 1);
+          else retenues.push(numero);
+          bouton.classList.toggle('retenue', at < 0);
+          appliquer();
+        });
+        grille.appendChild(bouton);
+        // Les vignettes arrivent au fil de l'eau : la grille est utilisable tout de suite.
+        vignette(pdf, numero).then((url) => { img.src = url; }).catch(() => {});
+      }
+    } catch (error) {
+      grille.innerHTML = '';
+      grille.hidden = true;
+      status(`Ce PDF n'a pas pu être ouvert : ${error.message}`, 'error');
+    }
+  };
+
+  $('[data-action="pick-pdf"]', row).addEventListener('click', () => file.click());
+  file.addEventListener('change', () => ouvrir(file.files[0]));
+  $('[data-action="remove"]', row).addEventListener('click', onRemove);
+  return row;
 }
 
 /* ---------------------------------------------------------------- capture */
@@ -335,6 +452,7 @@ function cleaned() {
     }
     step.encarts = step.encarts.filter((c) => (c.label ?? '').trim() || (c.texte ?? '').trim());
     step.boutons = step.boutons.filter((b) => (b.texte ?? '').trim());
+    step.annexes = (step.annexes ?? []).filter((a) => a.dataUrl && (a.texte ?? '').trim());
     delete step.afficherAvance;
     delete step.numeroManuel;
   }
@@ -385,7 +503,12 @@ async function download() {
   try {
     const bytes = await build();
     saveFile(new Blob([bytes], { type: 'application/pdf' }), `${slugify(doc.titre)}.pdf`);
-    if (!$('#status').classList.contains('error')) status('PDF téléchargé.', 'ok');
+    if (!$('#status').classList.contains('error')) {
+      status(stockageDisponible
+        ? 'PDF téléchargé.'
+        : 'PDF envoyé au téléchargement. S’il ne s’est rien passé, ouvrez « Voir le PDF » '
+          + 'et utilisez l’icône de téléchargement du lecteur.', 'ok');
+    }
   } catch (error) {
     status(`La génération a échoué : ${error.message}`, 'error');
     console.error(error);
@@ -414,13 +537,20 @@ function bindActions() {
   $('#btn-pdf').addEventListener('click', download);
   $('#btn-close-preview').addEventListener('click', () => { $('#overlay').hidden = true; });
 
+  // Dernier recours quand le téléchargement direct est bloqué par un cadre bac à
+  // sable : le PDF s'ouvre dans un onglet, où le lecteur du navigateur permet de
+  // l'enregistrer et de l'imprimer.
+  $('#btn-open-tab').addEventListener('click', () => {
+    if (previewUrl) window.open(previewUrl, '_blank');
+  });
+
   const menu = $('#menu');
   $('#btn-menu').addEventListener('click', (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; });
   document.addEventListener('click', () => { menu.hidden = true; });
   menu.addEventListener('click', (e) => e.stopPropagation());
 
   $('#btn-export').addEventListener('click', () => {
-    saveFile(new Blob([toYaml(cleaned())], { type: 'text/yaml' }),
+    saveFile(new Blob([toYaml(cleaned(), { inlineImages: true })], { type: 'text/yaml' }),
       `${slugify(doc.titre).toLowerCase()}.yaml`);
     status('Fiche enregistrée. Rouvrez-la plus tard avec « Ouvrir une fiche enregistrée ».', 'ok');
   });
@@ -461,6 +591,11 @@ function fillPresets() {
     option.value = preset.label;
     list.appendChild(option);
   }
+}
+
+if (!stockageDisponible) {
+  $('#avertissement').hidden = false;
+  $('#btn-fermer-avertissement').addEventListener('click', () => { $('#avertissement').hidden = true; });
 }
 
 loadDraft();

@@ -259,7 +259,14 @@ export function layoutCard(step, geom, measurer) {
   }
 
   // — boutons —
-  const buttons = step.boutons ?? [];
+  // Une annexe se présente comme un bouton : même habillage, mais la cible est
+  // une page empruntée à un autre PDF, ajoutée à la fin du document.
+  const buttons = [
+    ...(step.boutons ?? []),
+    ...(step.annexes ?? [])
+      .filter((a) => a.dataUrl && (a.texte ?? '').trim())
+      .map((a) => ({ texte: a.texte, annexeId: a.id })),
+  ];
   if (buttons.length) {
     advance();
     const zoneX0 = x0 + CARD.buttons.left;
@@ -270,6 +277,7 @@ export function layoutCard(step, geom, measurer) {
         type: 'button',
         x: zoneX0 + i * each, top: y, width: each, height: CARD.buttons.height,
         text: button.texte ?? '', target: button.cible ?? null, uri: button.url ?? null,
+        annexeId: button.annexeId ?? null,
       });
     });
     y += CARD.buttons.height;
