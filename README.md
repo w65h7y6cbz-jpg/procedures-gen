@@ -24,16 +24,25 @@ Deux façons de l'ouvrir :
 Le fichier unique est reconstruit par `npm run standalone` ; il embarque polices,
 bibliothèques, logo et badge, et pèse ~4 Mo.
 
-1. ouvrir l'interface (fichier unique ou page publiée) ;
-2. remplir le formulaire : titre, O/P/R, puis une carte par étape ;
-3. coller ou glisser les captures d'écran directement dans chaque étape ;
-4. **Aperçu** pour contrôler, **Télécharger le PDF** pour récupérer la fiche.
+L'interface est un **assistant** : un seul écran à la fois.
+
+1. **La fiche** — titre, sous-titre, puis objectif / prérequis / résultat.
+2. **Une étape par écran** — on colle la capture (Ctrl+V n'importe où sur l'écran, ou
+   glisser-déposer), puis le titre, ce qu'il faut faire, et ce qu'on obtient à la fin.
+   Tout le reste (encadré, exemple, lien, bouton, numérotation manuelle) est **caché**
+   derrière une ligne « Ajouter : … » et n'apparaît que si on le demande.
+3. **Terminer** — le bloc VALIDATION FINALE, la version, la date, et le PDF.
+
+On navigue avec **Précédent / Suivant**, ou en cliquant directement sur un point de la
+barre de progression. **Voir le PDF** est disponible à tout moment.
 
 Le brouillon est conservé dans le navigateur : fermer l'onglet ne perd rien.
 **Exporter le YAML** enregistre la fiche sous forme de fichier texte, à archiver dans
 `content/` pour pouvoir la reprendre ou la régénérer plus tard.
 
 ### Ce que contient une étape
+
+Seules les trois premières lignes sont visibles par défaut ; le reste s'ajoute à la demande.
 
 | Champ | Obligatoire | Rendu |
 |---|---|---|

@@ -1,4 +1,5 @@
-/* Interface du générateur — reprend la palette de la charte (DESIGN_SYSTEM.md §2). */
+/* Interface du générateur — palette de la charte (DESIGN_SYSTEM.md §2).
+   Assistant pas à pas : un seul écran à la fois, centré, peu d'éléments visibles. */
 
 :root {
   --navy: #263F8B;
@@ -10,150 +11,217 @@
   --bg-accent: #EAF4FA;
   --border: #CBD9E8;
   --danger: #B4232A;
-  --radius: 6px;
+  --radius: 8px;
+  --topbar: 62px;
+  --navbar: 68px;
 }
 
 * { box-sizing: border-box; }
 
+/* Un display explicite (flex, grid…) l'emporte sur la règle par défaut de [hidden].
+   On tranche une fois pour toutes plutôt que d'y repenser à chaque composant. */
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
 body {
   margin: 0;
-  font: 14px/1.45 "DejaVu Sans", "Verdana", system-ui, sans-serif;
+  font: 15px/1.5 "DejaVu Sans", Verdana, system-ui, sans-serif;
   color: var(--ink);
-  background: #fff;
+  background: var(--bg-light);
 }
-
-/* ------------------------------------------------------------- barre haute */
-
-.topbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 10px 18px; border-bottom: 2.25px solid var(--cyan); background: #fff;
-  position: sticky; top: 0; z-index: 10; flex-wrap: wrap;
-}
-.brand { display: flex; align-items: center; gap: 16px; }
-.brand img { height: 40px; }
-.badge {
-  display: inline-flex; flex-direction: column; align-items: center;
-  background: var(--navy); color: #fff; border-radius: 10px;
-  padding: 6px 18px; font-weight: 700; font-size: 12px; letter-spacing: .02em;
-}
-.badge em { font-style: normal; font-weight: 400; font-size: 9px; }
-.topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 button {
   font: inherit; cursor: pointer; border-radius: var(--radius);
   border: 1.25px solid var(--border); background: #fff; color: var(--ink);
-  padding: 7px 12px;
+  padding: 9px 15px;
 }
 button:hover { border-color: var(--cyan); }
+button:disabled { opacity: .4; cursor: default; }
+button:disabled:hover { border-color: var(--border); }
 button.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
-button.primary:hover { background: #1d3170; }
+button.primary:hover:not(:disabled) { background: #1d3170; }
 button.ghost { background: var(--bg-accent); border-color: var(--cyan); color: var(--navy); }
-button.danger { border-color: var(--border); color: var(--danger); padding: 4px 9px; }
+button.danger { color: var(--danger); }
 button.danger:hover { border-color: var(--danger); }
+button.icon { padding: 9px 13px; font-size: 17px; line-height: 1; }
+button.link {
+  border: 0; background: none; padding: 0; color: var(--cyan);
+  text-decoration: underline; font-size: inherit;
+}
+button.big-btn { padding: 14px 28px; font-size: 16px; }
+
+/* ------------------------------------------------------------- barre haute */
+
+.topbar {
+  height: var(--topbar);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 0 18px; border-bottom: 2.25px solid var(--cyan); background: #fff;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand img { height: 36px; }
+.badge {
+  display: inline-flex; flex-direction: column; align-items: center;
+  background: var(--navy); color: #fff; border-radius: 10px;
+  padding: 5px 16px; font-weight: 700; font-size: 11px; letter-spacing: .02em;
+}
+.badge em { font-style: normal; font-weight: 400; font-size: 8px; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(20, 33, 61, .14); padding: 6px; min-width: 250px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.menu button { border: 0; text-align: left; border-radius: 5px; }
+.menu button:hover { background: var(--bg-accent); }
 
 /* --------------------------------------------------------------- statuts */
 
 .status {
-  margin: 0; padding: 9px 18px; font-size: 13px;
+  padding: 10px 18px; font-size: 13.5px;
   background: var(--bg-accent); border-bottom: 1px solid var(--border); color: var(--navy);
 }
 .status.error { background: #FDEEEE; border-color: #E3B7B7; color: var(--danger); }
 .status.ok { background: #EAF6F0; border-color: #B6DCC8; color: var(--green); }
 
-/* ------------------------------------------------------------ disposition */
+/* ------------------------------------------------------------ progression */
 
-.layout {
-  display: grid; grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
-  gap: 0; height: calc(100vh - 63px);
+.stepper {
+  display: flex; gap: 6px; align-items: center; justify-content: center;
+  padding: 12px 18px; background: #fff; border-bottom: 1px solid var(--border);
+  overflow-x: auto;
 }
-@media (max-width: 1000px) { .layout { grid-template-columns: 1fr; height: auto; } }
-
-.pane { overflow-y: auto; padding: 16px; }
-.pane.form { border-right: 1px solid var(--border); background: var(--bg-light); }
-.pane.preview { display: flex; flex-direction: column; padding: 0; background: #f2f4f7; }
-
-.preview-head {
-  padding: 8px 14px; font-size: 12px; color: var(--slate);
-  border-bottom: 1px solid var(--border); background: #fff;
+.stepper button {
+  border: 0; background: none; padding: 4px 3px; color: var(--slate);
+  font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  min-width: 34px;
 }
-#preview-frame { flex: 1; width: 100%; border: 0; min-height: 480px; }
-#preview-frame[hidden] { display: none; }
-.preview-empty {
-  flex: 1; display: grid; place-items: center; color: var(--slate); padding: 40px; text-align: center;
+.stepper button::before {
+  content: ''; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--border); transition: background .15s, transform .15s;
 }
-/* « display: grid » l'emporte sur la règle par défaut de [hidden] : il faut le neutraliser
-   explicitement, sinon le message d'accueil reste visible sous l'aperçu. */
-.preview-empty[hidden] { display: none; }
+.stepper button.done::before { background: var(--cyan); }
+.stepper button.active::before { background: var(--navy); transform: scale(1.45); }
+.stepper button.active { color: var(--navy); font-weight: 700; }
+.stepper button:hover::before { background: var(--cyan); }
 
-/* ------------------------------------------------------------- formulaire */
+/* --------------------------------------------------------------- écrans */
 
-fieldset.card {
-  border: 1px solid var(--border); border-top: 3px solid var(--cyan);
-  border-radius: 0; background: #fff; margin: 0 0 14px; padding: 12px 14px 14px;
-  position: relative;
+main {
+  min-height: calc(100vh - var(--topbar) - var(--navbar) - 48px);
+  /* la barre du bas est collante : on réserve la place pour qu'elle ne masque rien */
+  padding: 30px 18px calc(var(--navbar) + 24px);
 }
-legend { color: var(--navy); font-weight: 700; padding: 0 6px; }
 
-label { display: block; margin: 10px 0; font-size: 12px; color: var(--slate); }
-label.inline { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
-label small { display: block; color: var(--slate); font-size: 11px; margin-top: 3px; }
-
-input[type="text"], input[type="number"], textarea, select {
-  display: block; width: 100%; margin-top: 4px; font: inherit; color: var(--ink);
-  border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; background: #fff;
+.screen {
+  max-width: 760px; margin: 0 auto;
+  background: #fff; border: 1px solid var(--border); border-top: 3px solid var(--cyan);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 26px 30px 30px;
 }
+.screen h1 { margin: 0 0 4px; font-size: 24px; color: var(--navy); }
+.lead { margin: 0 0 22px; color: var(--slate); font-size: 14px; }
+
+label { display: block; margin: 16px 0; font-size: 13.5px; color: var(--slate); }
+label.big { font-size: 14px; }
+label.inline {
+  display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 15px; margin: 18px 0;
+}
+label small { display: block; color: var(--slate); font-size: 12px; margin-top: 5px; }
+
+input[type="text"], textarea, select {
+  display: block; width: 100%; margin-top: 6px; font: inherit; color: var(--ink);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; background: #fff;
+}
+label.big input[type="text"] { font-size: 18px; padding: 12px 14px; }
 input:focus, textarea:focus, select:focus { outline: 2px solid var(--cyan); outline-offset: -1px; }
 textarea { resize: vertical; }
 
-.row { display: flex; gap: 10px; align-items: flex-end; }
-.row > label { flex: 1; }
-.row > label.narrow { flex: 0 0 150px; }
+.row { display: flex; gap: 14px; }
+.row > label.narrow { flex: 0 0 190px; }
 
-.steps-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
-.steps-head h2 { font-size: 15px; color: var(--navy); margin: 0; }
-
-/* --------------------------------------------------------------- étapes */
-
-.step { padding-top: 14px; }
-.step legend { display: inline-flex; align-items: center; gap: 8px; }
-.step-badge {
-  display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--navy); color: #fff; font-size: 11px; font-weight: 700;
-}
-.step-tools { position: absolute; top: 8px; right: 10px; display: flex; gap: 4px; }
-.step-tools button { padding: 2px 8px; font-size: 12px; }
-
+.opr { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 6px; }
 .pill {
-  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
-  color: #fff; font-size: 10px; font-weight: 700; vertical-align: middle; margin-right: 5px;
+  display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
+  color: #fff; font-size: 10px; font-weight: 700; vertical-align: middle; margin-right: 6px;
 }
 .pill-navy { background: var(--navy); }
 .pill-cyan { background: var(--cyan); }
 .pill-green { background: var(--green); }
 
-/* -------------------------------------------------------------- captures */
+/* -------------------------------------------------------------- capture */
 
-.capture, .callouts, .buttons-block {
-  border: 1px solid var(--border); border-left: 2.25px solid var(--cyan);
-  background: var(--bg-light); padding: 10px; margin: 12px 0;
+.shot {
+  position: relative; border: 2px dashed var(--border); border-radius: var(--radius);
+  background: var(--bg-light); padding: 14px; text-align: center; margin-bottom: 6px;
+  transition: border-color .15s, background .15s;
 }
-.capture-head, .callouts-head {
-  display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--navy);
-}
-.capture-head > span, .callouts-head > span { flex: 1; }
-.capture-drop {
-  margin-top: 8px; padding: 14px; border: 1px dashed var(--border); border-radius: var(--radius);
-  text-align: center; font-size: 12px; color: var(--slate); background: #fff;
-}
-.capture-drop:focus, .capture-drop.over { border-color: var(--cyan); outline: none; background: var(--bg-accent); }
-.capture img { display: block; max-width: 100%; margin-top: 8px; border: 1px solid var(--border); }
+.shot:focus, .shot.over { outline: none; border-color: var(--cyan); background: var(--bg-accent); }
+.shot-empty { padding: 34px 10px; display: flex; flex-direction: column; gap: 8px; }
+.shot-empty strong { font-size: 17px; color: var(--navy); }
+.shot-empty span { color: var(--slate); font-size: 13.5px; }
+.shot img { display: block; max-width: 100%; max-height: 320px; margin: 0 auto; border: 1px solid var(--border); background: #fff; }
+.shot-tools { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.shot-tools button { padding: 6px 12px; font-size: 13px; }
 
-.callout-row, .button-row {
-  display: grid; gap: 6px; align-items: start; margin-top: 8px;
-  grid-template-columns: 150px 1fr 2fr auto;
+/* ------------------------------------------------------------ compléments */
+
+.extras { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.extra {
+  border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+  background: var(--bg-light); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 14px;
 }
-.button-row { grid-template-columns: 2fr 1fr 1fr auto; }
-.callout-row > *, .button-row > * { margin: 0; }
-@media (max-width: 760px) {
-  .callout-row, .button-row { grid-template-columns: 1fr auto; }
+.extra-head {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+  font-size: 13px; font-weight: 700; color: var(--navy);
+}
+.extra-head > span { flex: 1; }
+.extra-head select { width: auto; margin: 0; flex: 0 0 auto; font-size: 13px; padding: 6px 8px; }
+.extra-head input { margin: 0; flex: 1; }
+.extra-head button.danger { padding: 4px 9px; }
+.extra > input[type="text"] { margin-bottom: 8px; }
+.extra label { margin: 8px 0; }
+
+.add-row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--slate);
+}
+.add-row button:not(.link) { padding: 6px 12px; font-size: 13px; }
+
+.finish { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------- barre du bas */
+
+.navbar {
+  position: sticky; bottom: 0; height: var(--navbar);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 18px; background: #fff; border-top: 1px solid var(--border);
+}
+.navbar-mid { display: flex; gap: 8px; }
+.navbar-mid button { font-size: 13px; padding: 7px 12px; }
+#btn-prev, #btn-next { min-width: 130px; }
+
+/* --------------------------------------------------------------- aperçu */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 40; background: rgba(20, 33, 61, .55);
+  display: flex; flex-direction: column; padding: 26px;
+}
+.overlay[hidden] { display: none; }
+.overlay-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff; border-radius: var(--radius) var(--radius) 0 0;
+  padding: 10px 16px; font-weight: 700; color: var(--navy);
+}
+#preview-frame { flex: 1; width: 100%; border: 0; border-radius: 0 0 var(--radius) var(--radius); background: #fff; }
+
+@media (max-width: 700px) {
+  .screen { padding: 20px 16px 24px; }
+  .navbar-mid { display: none; }
+  .brand .badge { display: none; }
 }

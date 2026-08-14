@@ -15,186 +15,203 @@
     <span class="badge">FICHE PROCÉDURE<em>SUPPORT &amp; OUTILS</em></span>
   </div>
   <div class="topbar-actions">
-    <button type="button" id="btn-import">Importer un YAML</button>
-    <button type="button" id="btn-export">Exporter le YAML</button>
-    <button type="button" id="btn-preview" class="primary">Aperçu</button>
-    <button type="button" id="btn-pdf" class="primary">Télécharger le PDF</button>
+    <button type="button" id="btn-preview">Voir le PDF</button>
+    <button type="button" id="btn-pdf" class="primary">Télécharger</button>
+    <div class="menu-wrap">
+      <button type="button" id="btn-menu" class="icon" title="Autres actions" aria-haspopup="true">⋯</button>
+      <div id="menu" class="menu" hidden>
+        <button type="button" id="btn-import">Ouvrir une fiche enregistrée</button>
+        <button type="button" id="btn-export">Enregistrer la fiche</button>
+        <button type="button" id="btn-reset" class="danger">Tout effacer et recommencer</button>
+      </div>
+    </div>
     <input type="file" id="file-yaml" accept=".yaml,.yml" hidden>
   </div>
 </header>
 
 <div id="status" class="status" hidden></div>
 
-<main class="layout">
-  <section class="pane form" id="pane-form">
+<nav id="stepper" class="stepper" aria-label="Progression"></nav>
 
-    <fieldset class="card">
-      <legend>Document</legend>
-      <label>Titre de la procédure
-        <input type="text" id="f-titre" placeholder="Prise en charge DATEC">
+<main id="wizard"></main>
+
+<div id="overlay" class="overlay" hidden>
+  <div class="overlay-bar">
+    <span>Aperçu du PDF</span>
+    <button type="button" id="btn-close-preview">Fermer</button>
+  </div>
+  <iframe id="preview-frame" title="Aperçu du PDF"></iframe>
+</div>
+
+<!-- ------------------------------------------------------------ écran 1 -->
+<template id="tpl-fiche">
+  <section class="screen">
+    <h1>La fiche</h1>
+    <p class="lead">De quoi parle cette procédure ? Ces informations apparaissent en haut de la première page.</p>
+
+    <label class="big">Titre de la procédure
+      <input type="text" data-doc="titre" placeholder="Remplacer un toner sur MFP Sharp" autocomplete="off">
+    </label>
+
+    <label>Sous-titre
+      <input type="text" data-doc="sousTitre" placeholder="Identification de la référence, remplacement et traçabilité." autocomplete="off">
+    </label>
+
+    <div class="opr">
+      <label><span class="pill pill-navy">O</span> Objectif — à quoi sert cette procédure ?
+        <textarea data-doc="objectif" rows="2" placeholder="Remplacer un toner vide et tracer l’intervention dans le BI."></textarea>
       </label>
-      <label>Sous-titre par défaut
-        <input type="text" id="f-sousTitre" placeholder="Constitution, transmission et traçabilité…">
-        <small>Utilisé sur chaque page, sauf si une étape de la page déclare son propre sous-titre.</small>
+      <label><span class="pill pill-cyan">P</span> Prérequis — ce qu'il faut avoir sous la main
+        <textarea data-doc="prerequis" rows="2" placeholder="BI ouvert dans CopyPark ; toner de remplacement en stock technicien."></textarea>
       </label>
-      <div class="row">
-        <label>Version
-          <input type="text" id="f-version" placeholder="1.0">
-        </label>
-        <label>Date
-          <input type="text" id="f-date" placeholder="JJ/MM/AAAA">
-        </label>
-        <button type="button" id="btn-bump" class="ghost">Incrémenter</button>
+      <label><span class="pill pill-green">R</span> Résultat — la situation une fois terminé
+        <textarea data-doc="resultat" rows="2" placeholder="Le toner est remplacé et le BI est clôturé."></textarea>
+      </label>
+    </div>
+  </section>
+</template>
+
+<!-- ------------------------------------------------------------ écran étape -->
+<template id="tpl-etape">
+  <section class="screen">
+    <h1 data-role="heading">Étape 1</h1>
+    <p class="lead">Collez la capture d'écran, puis expliquez ce qu'il faut faire.</p>
+
+    <div class="shot" data-role="shot" tabindex="0">
+      <div class="shot-empty" data-role="shot-empty">
+        <strong>Collez votre capture</strong>
+        <span>Ctrl + V, ou glissez une image ici, ou <button type="button" class="link" data-action="pick">choisissez un fichier</button></span>
       </div>
-    </fieldset>
-
-    <fieldset class="card">
-      <legend>Objectif · Prérequis · Résultat</legend>
-      <label><span class="pill pill-navy">O</span> Objectif
-        <textarea id="f-objectif" rows="2"></textarea>
-      </label>
-      <label><span class="pill pill-cyan">P</span> Prérequis
-        <textarea id="f-prerequis" rows="2"></textarea>
-      </label>
-      <label><span class="pill pill-green">R</span> Résultat
-        <textarea id="f-resultat" rows="2"></textarea>
-      </label>
-    </fieldset>
-
-    <div class="steps-head">
-      <h2>Étapes</h2>
-      <button type="button" id="btn-add-step" class="primary">+ Ajouter une étape</button>
+      <img data-role="thumb" alt="" hidden>
+      <div class="shot-tools" data-role="shot-tools" hidden>
+        <button type="button" data-action="pick">Remplacer</button>
+        <button type="button" data-action="clear" class="danger">Retirer</button>
+      </div>
+      <input type="file" data-role="file" accept="image/png,image/jpeg" hidden>
     </div>
-    <div id="steps"></div>
 
-    <fieldset class="card">
-      <legend>Validation finale</legend>
-      <label class="inline">
-        <input type="checkbox" id="f-validation-actif" checked>
-        Afficher le bloc VALIDATION FINALE
-      </label>
-      <label>Contenu du bloc — une ligne de saisie = une ligne imprimée
-        <textarea id="f-validation-items" rows="5"
-          placeholder="Garantie contrôlée | Modèle vérifié | Référence relevée"></textarea>
-        <small>Séparez les points d'une même ligne par «&nbsp;|&nbsp;». Regroupez-les par
-        thème, comme dans les fiches existantes. Une ligne trop longue est repliée.</small>
-      </label>
-      <button type="button" id="btn-suggest" class="ghost">
-        Pré-remplir depuis les résultats attendus
-      </button>
-    </fieldset>
+    <label class="big">Titre de l'étape
+      <input type="text" data-step="titre" placeholder="Relever la référence du toner" autocomplete="off">
+    </label>
 
-  </section>
+    <label>Que faut-il faire ?
+      <textarea data-step="action" rows="3" placeholder="Ouvrir le BI dans CopyPark et relever le modèle de la machine, puis la référence exacte du toner."></textarea>
+    </label>
 
-  <section class="pane preview">
-    <div class="preview-head">
-      <span id="preview-info">Aperçu</span>
-    </div>
-    <iframe id="preview-frame" title="Aperçu du PDF"></iframe>
-    <div id="preview-empty" class="preview-empty">
-      Renseignez la fiche puis cliquez sur <strong>Aperçu</strong>.
+    <label>Ce qu'on obtient à la fin de l'étape
+      <input type="text" data-step="resultat" placeholder="La référence du toner à commander est identifiée." autocomplete="off">
+    </label>
+
+    <div class="extras" data-role="extras"></div>
+
+    <div class="add-row">
+      <span>Ajouter :</span>
+      <button type="button" data-action="add-callout">un encadré</button>
+      <button type="button" data-action="add-exemple">un exemple</button>
+      <button type="button" data-action="add-lien">un lien</button>
+      <button type="button" data-action="add-bouton">un bouton</button>
+      <button type="button" data-action="advanced" class="link">options avancées</button>
     </div>
   </section>
-</main>
+</template>
 
-<template id="tpl-step">
-  <fieldset class="card step">
-    <legend>
-      <span class="step-badge" data-role="badge">1</span>
-      <span data-role="legend-title">Étape</span>
-    </legend>
-    <div class="step-tools">
-      <button type="button" data-action="up" title="Monter">↑</button>
-      <button type="button" data-action="down" title="Descendre">↓</button>
-      <button type="button" data-action="remove" title="Supprimer" class="danger">✕</button>
+<!-- ------------------------------------------------------------ écran final -->
+<template id="tpl-fin">
+  <section class="screen">
+    <h1>Terminer</h1>
+    <p class="lead">Dernier bloc de la fiche, puis récupération du PDF.</p>
+
+    <label class="inline">
+      <input type="checkbox" data-role="validation-actif">
+      Afficher le bloc <strong>VALIDATION FINALE</strong> en bas de la fiche
+    </label>
+
+    <div data-role="validation-bloc">
+      <label>Les points à vérifier — une ligne de saisie = une ligne imprimée
+        <textarea data-role="validation-lignes" rows="4"
+          placeholder="Référence relevée | Toner remplacé | Sortie de stock saisie"></textarea>
+        <small>Séparez les points d'une même ligne par «&nbsp;|&nbsp;».</small>
+      </label>
+      <button type="button" data-action="suggest" class="ghost">Proposer à partir des étapes</button>
     </div>
 
     <div class="row">
-      <label class="narrow">Numéro
-        <input type="text" data-field="numero" placeholder="1, H1, L2…">
+      <label class="narrow">Version
+        <input type="text" data-doc="version" autocomplete="off">
       </label>
-      <label>Titre de l'étape
-        <input type="text" data-field="titre">
-      </label>
-    </div>
-
-    <label>Sous-titre de page (facultatif)
-      <input type="text" data-field="sousTitre">
-      <small>S'applique à la page où commence cette étape.</small>
-    </label>
-
-    <label>Action
-      <textarea data-field="action" rows="3"></textarea>
-    </label>
-
-    <label>Lien direct (facultatif)
-      <input type="text" data-field="lien" placeholder="https://…">
-    </label>
-
-    <div class="capture">
-      <div class="capture-head">
-        <span>Capture d'écran</span>
-        <input type="file" data-role="capture-file" accept="image/png,image/jpeg" hidden>
-        <button type="button" data-action="pick-capture" class="ghost">Choisir une image</button>
-        <button type="button" data-action="clear-capture" class="ghost">Retirer</button>
-      </div>
-      <div class="capture-drop" data-role="capture-drop" tabindex="0">
-        Glissez une image ici, ou collez-la (Ctrl+V) après avoir cliqué dans cette zone.
-      </div>
-      <img data-role="capture-thumb" alt="" hidden>
-      <label class="narrow">Largeur imposée (pt, facultatif)
-        <input type="number" step="0.05" data-field="captureLargeur" placeholder="pleine largeur">
+      <label class="narrow">Date
+        <input type="text" data-doc="date" autocomplete="off">
       </label>
     </div>
 
-    <div class="callouts">
-      <div class="callouts-head">
-        <span>Encarts</span>
-        <button type="button" data-action="add-callout" class="ghost">+ Encart</button>
-      </div>
-      <div data-role="callouts"></div>
+    <div class="finish">
+      <button type="button" data-action="download" class="primary big-btn">Télécharger le PDF</button>
+      <button type="button" data-action="preview" class="ghost big-btn">Voir le PDF</button>
     </div>
-
-    <label>Exemple illustré (italique, facultatif)
-      <textarea data-field="exemple" rows="2"></textarea>
-    </label>
-
-    <label>Résultat attendu
-      <textarea data-field="resultat" rows="2"></textarea>
-    </label>
-
-    <div class="buttons-block">
-      <div class="callouts-head">
-        <span>Boutons de navigation</span>
-        <button type="button" data-action="add-button" class="ghost">+ Bouton</button>
-      </div>
-      <div data-role="buttons"></div>
-    </div>
-  </fieldset>
+  </section>
 </template>
 
+<!-- ------------------------------------------------------------ fragments -->
 <template id="tpl-callout">
-  <div class="callout-row">
-    <select data-field="style">
-      <option value="info">Info (bleu clair)</option>
-      <option value="important">Important (bleu marine)</option>
-    </select>
-    <input type="text" data-field="label" placeholder="LIBELLÉ" list="callout-presets">
-    <textarea data-field="texte" rows="2" placeholder="Texte de l'encart"></textarea>
-    <button type="button" data-action="remove-callout" class="danger" title="Supprimer">✕</button>
+  <div class="extra">
+    <div class="extra-head">
+      <select data-field="style">
+        <option value="info">Encadré bleu clair</option>
+        <option value="important">Encadré bleu marine (important)</option>
+      </select>
+      <input type="text" data-field="label" placeholder="POINT D’ARRÊT OBLIGATOIRE" list="callout-presets">
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+    <textarea data-field="texte" rows="2" placeholder="Texte de l'encadré"></textarea>
   </div>
 </template>
 
-<template id="tpl-button">
-  <div class="button-row">
+<template id="tpl-simple">
+  <div class="extra">
+    <div class="extra-head">
+      <span data-role="titre"></span>
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+    <textarea data-role="champ" rows="2"></textarea>
+  </div>
+</template>
+
+<template id="tpl-bouton">
+  <div class="extra">
+    <div class="extra-head">
+      <span>Bouton de navigation</span>
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
     <input type="text" data-field="texte" placeholder="CONTINUER VERS LA DEMANDE D’ACHAT">
-    <input type="text" data-field="cible" placeholder="étape visée (ex. 3)">
-    <input type="text" data-field="url" placeholder="ou URL externe">
-    <button type="button" data-action="remove-button" class="danger" title="Supprimer">✕</button>
+    <input type="text" data-field="cible" placeholder="numéro de l'étape visée (ex. 5), ou laisser vide">
+  </div>
+</template>
+
+<template id="tpl-advanced">
+  <div class="extra">
+    <div class="extra-head">
+      <span>Options avancées</span>
+      <button type="button" data-action="remove" class="danger" title="Fermer">✕</button>
+    </div>
+    <label>Numéro affiché sur la pastille
+      <input type="text" data-field="numero" placeholder="1, ou H1 / L2 pour une branche">
+    </label>
+    <label>Sous-titre de la page où commence cette étape
+      <input type="text" data-field="sousTitre">
+    </label>
   </div>
 </template>
 
 <datalist id="callout-presets"></datalist>
+
+<footer class="navbar">
+  <button type="button" id="btn-prev">‹ Précédent</button>
+  <div class="navbar-mid">
+    <button type="button" id="btn-add-step" class="ghost">+ Ajouter une étape</button>
+    <button type="button" id="btn-del-step" class="danger">Supprimer cette étape</button>
+  </div>
+  <button type="button" id="btn-next" class="primary">Suivant ›</button>
+</footer>
 
 <script src="js/vendor/pdf-lib.min.js"></script>
 <script src="js/vendor/fontkit.umd.min.js"></script>
