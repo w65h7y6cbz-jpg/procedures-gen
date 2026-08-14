@@ -8,7 +8,7 @@
 
 import {
   COLORS, FONT_METRICS, PAGE, HEADER, TITLE, OPR, GRID, CARD, VALIDATION, FOOTER,
-  fetchAssetBytes,
+  ANNEXE, fetchAssetBytes,
 } from './tokens.js';
 import { layoutDocument, wrapText, lineBox, baselineFromTop, labelIndent } from './layout.js';
 
@@ -359,6 +359,37 @@ function drawValidation(page, fonts, validation) {
   });
 }
 
+/** Page annexe : titre, puis la capture au plus grand format qui tienne. */
+async function drawAnnexe(pdfDoc, page, fonts, annexe, imageCache) {
+  drawTextTop(page, fonts, {
+    text: annexe.titre || annexe.texte || ANNEXE.subtitle,
+    x: TITLE.x, top: ANNEXE.titleTop,
+    size: ANNEXE.titleSize, style: 'bold', color: TITLE.color,
+  });
+  drawTextTop(page, fonts, {
+    text: ANNEXE.subtitle, x: TITLE.x, top: ANNEXE.subtitleTop,
+    size: TITLE.subtitle.size, style: 'regular', color: TITLE.subtitle.color,
+  });
+
+  const image = await embedImage(pdfDoc, imageCache, annexe.capture?.dataUrl);
+  if (!image) return;
+
+  const zoneW = ANNEXE.x1 - ANNEXE.x0 - 2 * ANNEXE.frameInset;
+  const zoneH = ANNEXE.y1 - ANNEXE.y0 - 2 * ANNEXE.frameInset;
+  const scale = Math.min(zoneW / image.width, zoneH / image.height);
+  const width = image.width * scale;
+  const height = image.height * scale;
+  const x = ANNEXE.x0 + (ANNEXE.x1 - ANNEXE.x0 - width) / 2;
+  const top = ANNEXE.y0 + (ANNEXE.y1 - ANNEXE.y0 - height) / 2;
+
+  page.drawImage(image, { x, y: flip(top + height), width, height });
+  drawRect(page, {
+    x: x - ANNEXE.frameInset, top: top - ANNEXE.frameInset,
+    width: width + 2 * ANNEXE.frameInset, height: height + 2 * ANNEXE.frameInset,
+    stroke: ANNEXE.border.color, strokeWidth: ANNEXE.border.width,
+  });
+}
+
 function drawFooter(page, fonts, doc, pageNumber, pageCount) {
   const band = FOOTER.band;
   drawRect(page, {
@@ -424,19 +455,17 @@ export async function renderProcedure(doc, options = {}) {
     });
   });
 
-  // Les pages empruntées à d'autres PDF sont ajoutées à la suite, dans l'ordre des
-  // étapes. On les copie avant de dessiner : les boutons qui y renvoient ont besoin
-  // que les pages cibles existent déjà.
+  // Les pages annexes sont ajoutées à la suite, dans l'ordre des étapes. Elles
+  // sont créées avant le dessin : les boutons qui y renvoient ont besoin que les
+  // pages cibles existent déjà.
+  const annexes = (doc.etapes ?? []).flatMap((step) => (step.annexes ?? [])
+    .filter((annexe) => annexe.id && annexe.capture?.dataUrl));
   const annexPages = new Map();
-  for (const step of doc.etapes ?? []) {
-    for (const annexe of step.annexes ?? []) {
-      if (!annexe.dataUrl || !annexe.id) continue;
-      const source = await PDFDocument.load(annexe.dataUrl);
-      const copied = await pdfDoc.copyPages(source, source.getPageIndices());
-      annexPages.set(annexe.id, pdfDoc.getPageCount());
-      for (const copiedPage of copied) pdfDoc.addPage(copiedPage);
-    }
-  }
+  const annexPdfPages = annexes.map((annexe) => {
+    annexPages.set(annexe.id, pdfDoc.getPageCount());
+    return pdfDoc.addPage([PAGE.width, PAGE.height]);
+  });
+  const totalPages = pages.length + annexes.length;
 
   for (let i = 0; i < pages.length; i += 1) {
     const spec = pages[i];
@@ -451,9 +480,21 @@ export async function renderProcedure(doc, options = {}) {
       await drawCard(pdfDoc, page, fonts, card, imageCache, stepPages, annexPages);
     }
     if (spec.validation) drawValidation(page, fonts, spec.validation);
-    // « Page n/N » ne compte que les pages composées : les annexes viennent d'un
-    // autre document et gardent leur propre pied de page.
-    drawFooter(page, fonts, doc, i + 1, pages.length);
+    drawFooter(page, fonts, doc, i + 1, totalPages);
+  }
+
+  for (let i = 0; i < annexes.length; i += 1) {
+    const page = annexPdfPages[i];
+    page.drawRectangle({
+      x: 0, y: 0, width: PAGE.width, height: PAGE.height, color: hexToRgb(PAGE.background),
+    });
+    drawHeader(page, fonts, logoImage, badgeImage);
+    drawLine(page, {
+      x0: HEADER.rule.x0, y0: HEADER.rule.y, x1: HEADER.rule.x1, y1: HEADER.rule.y,
+      color: HEADER.rule.color, width: HEADER.rule.width,
+    });
+    await drawAnnexe(pdfDoc, page, fonts, annexes[i], imageCache);
+    drawFooter(page, fonts, doc, pages.length + i + 1, totalPages);
   }
 
   return { bytes: await pdfDoc.save(), overflow };

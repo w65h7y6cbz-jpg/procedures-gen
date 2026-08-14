@@ -264,7 +264,7 @@ export function layoutCard(step, geom, measurer) {
   const buttons = [
     ...(step.boutons ?? []),
     ...(step.annexes ?? [])
-      .filter((a) => a.dataUrl && (a.texte ?? '').trim())
+      .filter((a) => a.capture?.dataUrl && (a.texte ?? '').trim())
       .map((a) => ({ texte: a.texte, annexeId: a.id })),
   ];
   if (buttons.length) {

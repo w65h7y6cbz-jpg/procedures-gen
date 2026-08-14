@@ -30,12 +30,11 @@
  *         - texte: HP — OUVRIR LA RECHERCHE
  *           cible: H1           # numéro d'étape visé (lien interne)
  *           url: https://…      # ou lien externe
- *       annexes:                # facultatif — pages empruntées à un autre PDF
+ *       annexes:                # facultatif — pages ajoutées à la fin de la fiche
  *         - id: a1              # identifiant, sert de cible au bouton
- *           texte: VOIR COMMENT VÉRIFIER LA GARANTIE
- *           dataUrl: data:application/pdf;base64,…   # les pages retenues
- *           nbPages: 1
- *           source: PROCEDURE_DATEC.pdf
+ *           texte: VOIR COMMENT VÉRIFIER LA GARANTIE   # libellé du bouton
+ *           titre: Vérifier la garantie HP             # titre de la page annexe
+ *           capture: { dataUrl: data:image/png;base64,… }
  *   validation:
  *     actif: true
  *     lignes:                 # une entrée = une ligne imprimée, points séparés par « | »
@@ -64,6 +63,11 @@ export const CALLOUT_PRESETS = [
   { label: 'CONTRÔLE OBLIGATOIRE', style: 'important' },
   { label: 'VALEURS OBLIGATOIRES', style: 'important' },
 ];
+
+/** Identifiant stable, sans dépendre de crypto.randomUUID (absent en file:// ancien). */
+export function nouvelId() {
+  return `a${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`;
+}
 
 export const todayFr = () => {
   const d = new Date();
@@ -106,7 +110,10 @@ export function normalise(raw) {
     ...step,
     encarts: (step.encarts ?? []).map((c) => ({ style: 'info', label: '', texte: '', ...c })),
     boutons: (step.boutons ?? []).map((b) => ({ texte: '', cible: '', url: '', ...b })),
-    annexes: (step.annexes ?? []).map((a) => ({ texte: '', dataUrl: '', nbPages: 0, source: '', ...a })),
+    annexes: (step.annexes ?? []).map((a) => ({
+      texte: '', titre: '', ...a,
+      capture: a.capture ? { ...a.capture } : null,
+    })),
     capture: step.capture ? { ...step.capture } : null,
   }));
   if (!doc.etapes.length) doc.etapes = base.etapes;
@@ -255,9 +262,11 @@ async function loadLogo() {
  * @param {string} contentBase préfixe appliqué aux chemins de captures
  */
 export async function hydrate(doc, contentBase = '') {
-  for (const step of doc.etapes ?? []) {
-    const capture = step.capture;
-    if (!capture) continue;
+  // Captures des étapes et images des pages annexes : même traitement.
+  const images = (doc.etapes ?? []).flatMap((step) => [
+    step.capture, ...(step.annexes ?? []).map((a) => a.capture),
+  ]).filter(Boolean);
+  for (const capture of images) {
     if (!capture.dataUrl && capture.fichier) {
       capture.dataUrl = await fetchAsDataUrl(contentBase + capture.fichier);
     }

@@ -56,11 +56,20 @@ Seules les trois premières lignes sont visibles par défaut ; le reste s'ajoute
 | Exemple illustré | non | italique gris |
 | Résultat attendu | non | ligne verte fer à droite |
 | Boutons (0..n) | non | boutons de navigation, lien interne vers une étape ou URL externe |
+| Pages annexes (0..n) | non | capture collée, ajoutée en pleine page à la fin de la fiche, avec un bouton qui y renvoie d'un clic |
 
 Les libellés d'encart connus (`ATTENTION`, `POINT D’ARRÊT OBLIGATOIRE`, `NE PAS CONFONDRE`,
 `DONNÉES VARIABLES`…) sont proposés en autocomplétion et **choisissent automatiquement leur
 style** — dans les fiches d'origine, ces libellés ne sont pas des types graphiques distincts
 mais deux styles seulement (cf. `DESIGN_SYSTEM.md` §8).
+
+### Pages annexes
+
+Une étape peut renvoyer vers une page venue d'ailleurs — la marche à suivre d'une autre
+procédure, un écran de référence. On colle la capture de cette page dans « Ajouter : une
+page annexe », on nomme le bouton, et c'est tout : la page est ajoutée en pleine page à la
+fin de la fiche, avec l'en-tête et le pied de la charte, et le bouton de l'étape y saute
+par un lien interne. Les pages annexes comptent dans la pagination.
 
 ### Pagination
 
@@ -98,6 +107,11 @@ etapes:
     boutons:
       - texte: CONTINUER VERS LA DEMANDE D’ACHAT
         cible: 3
+    annexes:
+      - id: a1
+        texte: VOIR COMMENT VÉRIFIER LA GARANTIE   # libellé du bouton
+        titre: Vérifier la garantie HP             # titre de la page annexe
+        capture: { fichier: assets/datec/garantie.png }
 validation:
   actif: true
   lignes:                       # une entrée = une ligne imprimée

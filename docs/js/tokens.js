@@ -280,6 +280,24 @@ export const VALIDATION = {
   rightInset: 10.30,
 };
 
+/**
+ * Page annexe : une capture pleine page, ajoutée à la fin de la fiche et visée
+ * par un bouton. Même en-tête, même titre et même pied que les pages de la fiche ;
+ * l'image occupe tout l'espace disponible, encadrée comme une capture d'étape.
+ */
+export const ANNEXE = {
+  y0: 118.60,
+  y1: 548.00,
+  x0: 19.90,
+  x1: 805.05,
+  titleSize: 17.5,
+  titleTop: 79.36,
+  subtitle: 'Annexe',
+  subtitleTop: 101.71,
+  frameInset: 3.20,
+  border: { color: COLORS.border, width: 0.75 },
+};
+
 export const FOOTER = {
   band: { y0: 558.90, y1: 595.25, fill: COLORS.navy },
   left:  { text: 'OPTIMIUM NC - SUPPORT & OUTILS', x: 28.45, top: 573.44, size: 7.5, color: COLORS.white },

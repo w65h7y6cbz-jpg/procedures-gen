@@ -10,9 +10,8 @@
  */
 
 import { renderProcedure } from './renderer.js';
-import { ouvrirPdf, vignette, extraire, nouvelId } from './annexes.js';
 import {
-  emptyDoc, emptyStep, normalise, suggestValidationItems,
+  emptyDoc, emptyStep, normalise, suggestValidationItems, nouvelId,
   toYaml, fromYaml, hydrate, readFileAsDataUrl, measureImage, todayFr, CALLOUT_PRESETS,
 } from './schema.js';
 
@@ -209,7 +208,7 @@ function buildEtape(step) {
     `Étape ${step.numero || screen} sur ${stepCount()}`;
 
   for (const input of $$('[data-step]', node)) bind(input, step, input.dataset.step, drawStepper);
-  bindShot(node, step);
+  bindImage(node, step);
   drawExtras(node, step);
 
   const extras = $('[data-role="extras"]', node);
@@ -218,7 +217,7 @@ function buildEtape(step) {
     if (kind === 'bouton') step.boutons.push({ texte: '', cible: '', url: '' });
     if (kind === 'exemple') step.exemple = step.exemple || ' ';
     if (kind === 'lien') step.lien = step.lien || ' ';
-    if (kind === 'annexe') step.annexes.push({ id: nouvelId(), texte: '', dataUrl: '', nbPages: 0, source: '' });
+    if (kind === 'annexe') step.annexes.push({ id: nouvelId(), texte: '', titre: '', capture: null });
     if (kind === 'advanced') step.afficherAvance = true;
     drawExtras(node, step);
     saveDraft();
@@ -314,103 +313,32 @@ function drawExtras(node, step) {
   }
 }
 
-/* ----------------------------------------------------------- annexes PDF */
+/* ------------------------------------------------------------ page annexe */
 
 /**
- * Bloc « page empruntée à un autre PDF » : on ouvre un PDF, on clique les pages
- * voulues, et elles sont extraites dans un petit document conservé avec la fiche.
+ * Bloc « page annexe » : on colle la capture d'une page venue d'ailleurs. Elle
+ * est ajoutée en pleine page à la fin de la fiche, et un bouton y renvoie.
  */
 function buildAnnexe(annexe, onRemove) {
   const row = $('#tpl-annexe').content.firstElementChild.cloneNode(true);
-  const file = $('[data-role="file"]', row);
-  const grille = $('[data-role="pages"]', row);
-  const source = $('[data-role="source"]', row);
-  const aide = $('[data-role="aide"]', row);
-  const libelle = $('[data-role="libelle-bloc"]', row);
-  const champ = $('[data-field="texte"]', row);
-
-  let sourceDataUrl = null;      // le PDF ouvert, gardé le temps du choix
-  let retenues = [];             // numéros de page retenus, à partir de 1
-
-  const majLibelle = () => {
-    libelle.hidden = retenues.length === 0;
-    if (retenues.length && !champ.value.trim()) {
-      champ.value = 'VOIR LA PROCÉDURE';
-      annexe.texte = champ.value;
-    }
-  };
-
-  if (annexe.dataUrl) {
-    source.hidden = false;
-    source.textContent = annexe.nbPages === 1
-      ? `1 page retenue${annexe.source ? ` de « ${annexe.source} »` : ''}.`
-      : `${annexe.nbPages} pages retenues${annexe.source ? ` de « ${annexe.source} »` : ''}.`;
-    libelle.hidden = false;
+  for (const input of $$('[data-field]', row)) {
+    const field = input.dataset.field;
+    input.value = annexe[field] ?? '';
+    input.addEventListener('input', () => { annexe[field] = input.value; saveDraft(); });
   }
-  champ.value = annexe.texte ?? '';
-  champ.addEventListener('input', () => { annexe.texte = champ.value; saveDraft(); });
-
-  const appliquer = async () => {
-    if (!sourceDataUrl || !retenues.length) return;
-    try {
-      annexe.dataUrl = await extraire(sourceDataUrl, [...retenues].sort((a, b) => a - b));
-      annexe.nbPages = retenues.length;
-      source.hidden = false;
-      source.textContent = retenues.length === 1
-        ? `1 page retenue${annexe.source ? ` de « ${annexe.source} »` : ''}.`
-        : `${retenues.length} pages retenues${annexe.source ? ` de « ${annexe.source} »` : ''}.`;
-      majLibelle();
-      saveDraft();
-    } catch (error) {
-      status(`Ces pages n'ont pas pu être extraites : ${error.message}`, 'error');
-    }
-  };
-
-  const ouvrir = async (blob) => {
-    if (!blob) return;
-    annexe.source = blob.name;
-    grille.hidden = false;
-    grille.innerHTML = '<p class="pages-chargement">Ouverture du PDF…</p>';
-    try {
-      sourceDataUrl = await readFileAsDataUrl(blob);
-      const { doc: pdf, nbPages } = await ouvrirPdf(sourceDataUrl);
-      grille.textContent = '';
-      aide.hidden = false;
-      retenues = [];
-      for (let numero = 1; numero <= nbPages; numero += 1) {
-        const bouton = document.createElement('button');
-        bouton.type = 'button';
-        bouton.className = 'page-choix';
-        const img = document.createElement('img');
-        img.alt = `Page ${numero}`;
-        bouton.append(img, document.createTextNode(`Page ${numero}`));
-        bouton.addEventListener('click', () => {
-          const at = retenues.indexOf(numero);
-          if (at >= 0) retenues.splice(at, 1);
-          else retenues.push(numero);
-          bouton.classList.toggle('retenue', at < 0);
-          appliquer();
-        });
-        grille.appendChild(bouton);
-        // Les vignettes arrivent au fil de l'eau : la grille est utilisable tout de suite.
-        vignette(pdf, numero).then((url) => { img.src = url; }).catch(() => {});
-      }
-    } catch (error) {
-      grille.innerHTML = '';
-      grille.hidden = true;
-      status(`Ce PDF n'a pas pu être ouvert : ${error.message}`, 'error');
-    }
-  };
-
-  $('[data-action="pick-pdf"]', row).addEventListener('click', () => file.click());
-  file.addEventListener('change', () => ouvrir(file.files[0]));
+  bindImage(row, annexe, 'La page annexe a été ajoutée.');
   $('[data-action="remove"]', row).addEventListener('click', onRemove);
   return row;
 }
 
-/* ---------------------------------------------------------------- capture */
+/* ---------------------------------------------------------------- capture *//* ---------------------------------------------------------------- capture */
 
-function bindShot(node, step) {
+/**
+ * Zone d'image : collage, glisser-déposer ou choix de fichier. Partagée par la
+ * capture d'une étape et par une page annexe — même geste, même code.
+ * @param {object} cible objet portant une propriété `capture`
+ */
+function bindImage(node, cible, messageAjout = 'Capture ajoutée.') {
   const zone = $('[data-role="shot"]', node);
   const file = $('[data-role="file"]', node);
   const thumb = $('[data-role="thumb"]', node);
@@ -418,7 +346,7 @@ function bindShot(node, step) {
   const tools = $('[data-role="shot-tools"]', node);
 
   const show = () => {
-    const url = step.capture?.dataUrl;
+    const url = cible.capture?.dataUrl;
     thumb.hidden = !url;
     tools.hidden = !url;
     empty.hidden = Boolean(url);
@@ -431,9 +359,9 @@ function bindShot(node, step) {
     try {
       const dataUrl = await readFileAsDataUrl(blob);
       const size = await measureImage(dataUrl);
-      step.capture = { dataUrl, ...size };
+      cible.capture = { dataUrl, ...size };
       show(); saveDraft();
-      status('Capture ajoutée.', 'ok');
+      status(messageAjout, 'ok');
     } catch (error) {
       status(`Cette image n'a pas pu être lue : ${error.message}`, 'error');
     }
@@ -444,7 +372,7 @@ function bindShot(node, step) {
   }
   file.addEventListener('change', () => accept(file.files[0]));
   $('[data-action="clear"]', node).addEventListener('click', () => {
-    step.capture = null; show(); saveDraft();
+    cible.capture = null; show(); saveDraft();
   });
 
   zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('over'); });
@@ -460,11 +388,24 @@ function bindShot(node, step) {
 
 // Coller une image fonctionne partout sur l'écran d'une étape, sans avoir à
 // cliquer d'abord dans la zone. Un collage de texte dans un champ n'est pas touché.
+let zoneVisee = null;
+document.addEventListener('focusin', (e) => {
+  const zone = e.target.closest?.('.extra')?.querySelector('[data-role="shot"]');
+  if (zone) zoneVisee = zone;
+});
+document.addEventListener('mouseover', (e) => {
+  const zone = e.target.closest?.('[data-role="shot"]');
+  if (zone) zoneVisee = zone;
+});
+
 document.addEventListener('paste', (e) => {
   if (!isStep()) return;
   const item = [...(e.clipboardData?.items ?? [])].find((i) => i.type.startsWith('image/'));
-  const zone = $('[data-role="shot"]');
-  if (!item || !zone?.__accept) return;
+  if (!item) return;
+  // La zone survolée ou active en priorité — une étape peut avoir plusieurs zones
+  // depuis l'ajout des pages annexes — sinon la capture de l'étape.
+  const zone = (zoneVisee && document.contains(zoneVisee)) ? zoneVisee : $('[data-role="shot"]');
+  if (!zone?.__accept) return;
   e.preventDefault();
   zone.__accept(item.getAsFile());
 });
@@ -480,7 +421,7 @@ function cleaned() {
     }
     step.encarts = step.encarts.filter((c) => (c.label ?? '').trim() || (c.texte ?? '').trim());
     step.boutons = step.boutons.filter((b) => (b.texte ?? '').trim());
-    step.annexes = (step.annexes ?? []).filter((a) => a.dataUrl && (a.texte ?? '').trim());
+    step.annexes = (step.annexes ?? []).filter((a) => a.capture?.dataUrl && (a.texte ?? '').trim());
     delete step.afficherAvance;
     delete step.numeroManuel;
   }

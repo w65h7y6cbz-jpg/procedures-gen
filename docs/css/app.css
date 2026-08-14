@@ -203,24 +203,13 @@ textarea { resize: vertical; }
 .extra > input[type="text"] { margin-bottom: 8px; }
 .extra label { margin: 8px 0; }
 
-/* ------------------------------------------------------------- annexes PDF */
+/* ---------------------------------------------------------- page annexe */
 
-.annexe-source { margin: 8px 0 0; font-size: 12.5px; color: var(--slate); }
-.annexe-aide { margin: 10px 0 6px; font-size: 12.5px; color: var(--navy); font-weight: 700; }
-.pages {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px; margin-bottom: 6px;
-}
-.page-choix {
-  border: 2px solid var(--border); border-radius: var(--radius); background: #fff;
-  padding: 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center;
-  gap: 5px; font-size: 12px; color: var(--slate);
-}
-.page-choix img { display: block; width: 100%; height: auto; }
-.page-choix:hover { border-color: var(--cyan); }
-.page-choix.retenue { border-color: var(--navy); background: var(--bg-accent); color: var(--navy); font-weight: 700; }
-.page-choix.retenue::after { content: '✓ retenue'; }
-.pages-chargement { grid-column: 1 / -1; color: var(--slate); font-size: 13px; padding: 8px; }
+.annexe-aide { margin: 0 0 10px; font-size: 12.5px; color: var(--slate); line-height: 1.5; }
+.extra .shot { margin-bottom: 4px; }
+.extra .shot-empty { padding: 22px 10px; }
+.extra .shot-empty strong { font-size: 15px; }
+.extra .shot img { max-height: 220px; }
 
 .add-row {
   display: flex; gap: 8px; align-items: center; flex-wrap: wrap;

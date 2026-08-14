@@ -150,7 +150,7 @@
       <button type="button" data-action="add-exemple">un exemple</button>
       <button type="button" data-action="add-lien">un lien</button>
       <button type="button" data-action="add-bouton">un bouton</button>
-      <button type="button" data-action="add-annexe">une page d'un autre PDF</button>
+      <button type="button" data-action="add-annexe">une page annexe</button>
       <button type="button" data-action="advanced" class="link">options avancées</button>
     </div>
   </section>
@@ -231,21 +231,32 @@
 <template id="tpl-annexe">
   <div class="extra">
     <div class="extra-head">
-      <span>Page empruntée à un autre PDF</span>
+      <span>Page annexe</span>
       <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
     </div>
+    <p class="annexe-aide">
+      Collez ici la capture de la page à joindre. Elle est ajoutée en pleine page à la fin
+      de la fiche, et le bouton ci-dessous y renvoie d'un clic.
+    </p>
 
-    <div data-role="choix">
-      <button type="button" data-action="pick-pdf" class="ghost">Choisir un PDF…</button>
-      <input type="file" data-role="file" accept="application/pdf" hidden>
+    <div class="shot" data-role="shot" tabindex="0">
+      <div class="shot-empty" data-role="shot-empty">
+        <strong>Collez la page à joindre</strong>
+        <span>Ctrl + V, ou glissez une image ici, ou <button type="button" class="link" data-action="pick">choisissez un fichier</button></span>
+      </div>
+      <img data-role="thumb" alt="" hidden>
+      <div class="shot-tools" data-role="shot-tools" hidden>
+        <button type="button" data-action="pick">Remplacer</button>
+        <button type="button" data-action="clear" class="danger">Retirer l'image</button>
+      </div>
+      <input type="file" data-role="file" accept="image/png,image/jpeg" hidden>
     </div>
 
-    <p class="annexe-source" data-role="source" hidden></p>
-    <p class="annexe-aide" data-role="aide" hidden>Cliquez sur la ou les pages à joindre.</p>
-    <div class="pages" data-role="pages" hidden></div>
-
-    <label data-role="libelle-bloc" hidden>Texte du bouton qui renverra vers ces pages
+    <label>Texte du bouton
       <input type="text" data-field="texte" placeholder="VOIR COMMENT VÉRIFIER LA GARANTIE">
+    </label>
+    <label>Titre de la page annexe
+      <input type="text" data-field="titre" placeholder="Vérifier la garantie HP">
     </label>
   </div>
 </template>
@@ -279,7 +290,6 @@
 <script src="js/vendor/pdf-lib.min.js"></script>
 <script src="js/vendor/fontkit.umd.min.js"></script>
 <script src="js/vendor/js-yaml.min.js"></script>
-<script src="js/vendor/pdfjs.min.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
