@@ -8,7 +8,7 @@
  * privé) ou sur un poste sans accès réseau.
  *
  *   node tools/build-standalone.mjs
- *   → dist/generateur-fiches-procedure.html
+ *   → dist/OPTIPROCESS.html
  *
  * Les modules ES sont concaténés en un script classique : ouverts en file://,
  * les navigateurs refusent les modules pour cause de politique d'origine.
@@ -82,7 +82,7 @@ async function main() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Générateur de fiches procédure — Optimium NC</title>
+<title>OPTIPROCESS — Générateur de fiches procédure</title>
 <link rel="icon" type="image/svg+xml" href="${assets['assets/icone.svg']}">
 <style>
 ${css}
@@ -103,7 +103,7 @@ ${modules.map(flatten).join('\n')}
 `;
 
   await mkdir(resolve(root, 'dist'), { recursive: true });
-  const target = 'dist/generateur-fiches-procedure.html';
+  const target = 'dist/OPTIPROCESS.html';
   await writeFile(resolve(root, target), out, 'utf-8');
   console.log(`${target} — ${(Buffer.byteLength(out) / 1024 / 1024).toFixed(1)} Mo`);
 }

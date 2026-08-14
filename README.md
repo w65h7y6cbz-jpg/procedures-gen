@@ -1,4 +1,4 @@
-# procedures-gen — générateur de fiches procédure Optimium NC
+# OPTIPROCESS — générateur de fiches procédure Optimium NC
 
 Produit des fiches procédure PDF à la charte « FICHE PROCÉDURE — SUPPORT & OUTILS »,
 à partir d'un formulaire web ou d'un fichier de contenu.
@@ -18,7 +18,7 @@ Deux façons de l'ouvrir :
 
 | | Quand |
 |---|---|
-| **`dist/generateur-fiches-procedure.html`** — un seul fichier, double-clic | Toujours. Fonctionne sans serveur, sans internet, depuis un partage réseau ou une clé USB. C'est la voie recommandée tant que le dépôt est privé, GitHub Pages n'étant pas disponible sans plan payant. |
+| **`dist/OPTIPROCESS.html`** — un seul fichier, double-clic | Toujours. Fonctionne sans serveur, sans internet, depuis un partage réseau ou une clé USB. C'est la voie recommandée tant que le dépôt est privé, GitHub Pages n'étant pas disponible sans plan payant. |
 | **GitHub Pages** | Si le dépôt passe public, ou avec un plan GitHub Pro. `Settings → Pages → Source : GitHub Actions`. |
 
 Le fichier unique est reconstruit par `npm run standalone` ; il embarque polices,
@@ -190,12 +190,16 @@ au prix d'un décalage visible si on compare avec une fiche ancienne.
 
 | | Où | Fichier |
 |---|---|---|
-| **Marque de l'outil** — cercle ouvert, nœuds en escalier, pastille de validation | icône d'onglet et en-tête de l'interface | [`docs/assets/icone.svg`](docs/assets/icone.svg), variante monochrome [`icone-mono.svg`](docs/assets/icone-mono.svg) |
+| **Marque OPTIPROCESS** — cercle ouvert, nœuds en escalier, pastille de validation | icône d'onglet et en-tête de l'interface | [`icone.svg`](docs/assets/icone.svg) · [`icone-mono.svg`](docs/assets/icone-mono.svg) (monochrome) · [`icone-blanc.svg`](docs/assets/icone-blanc.svg) (fonds sombres) |
 | **Charte Optimium NC** | uniquement dans les fiches produites | `docs/assets/logo_optimium_nc.jpeg`, `badge_fiche_procedure.jpeg` |
 
-La marque de l'outil **n'apparaît jamais dans les PDF** : les fiches restent à la charte
-Optimium, au point près. Le mot-symbole de l'en-tête se change dans
-[`docs/index.html`](docs/index.html), à la ligne `<span class="mot">`.
+La marque reprend la palette de la charte : le cercle et le premier nœud en bleu marine
+`#263F8B`, la progression vers le bleu clair `#159FD0`, et la pastille de validation en vert
+`#178653` — la couleur qui signale déjà la validation dans les fiches.
+
+Elle **n'apparaît jamais dans les PDF** : les fiches restent à la charte Optimium, au point
+près. Le mot-symbole de l'en-tête se change dans [`docs/index.html`](docs/index.html), à la
+ligne `<span class="mot">`.
 
 ---
 
@@ -241,7 +245,7 @@ output/                  PDF générés et images de différence (non versionné
 
 ## Distribuer l'outil
 
-Le générateur tient dans un seul fichier : `dist/generateur-fiches-procedure.html`.
+Le générateur tient dans un seul fichier : `dist/OPTIPROCESS.html`.
 Il s'envoie par Teams, par courriel ou se pose sur un partage réseau.
 
 **Chaque destinataire doit l'enregistrer sur son poste avant de l'ouvrir.** Ce n'est pas

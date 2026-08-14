@@ -37,7 +37,7 @@ page.on('pageerror', (error) => problems.push(String(error)));
 page.on('console', (message) => { if (message.type() === 'error') problems.push(message.text()); });
 
 try {
-  await page.goto(`file://${resolve(root, 'dist/generateur-fiches-procedure.html')}`, { waitUntil: 'load' });
+  await page.goto(`file://${resolve(root, 'dist/OPTIPROCESS.html')}`, { waitUntil: 'load' });
   await page.waitForFunction(() => Boolean(window.__api), null, { timeout: 20000 });
   await page.evaluate(() => { window.fetch = () => Promise.reject(new TypeError('Failed to fetch')); });
 

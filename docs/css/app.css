@@ -11,12 +11,12 @@
   --bg-accent: #EAF4FA;
   --border: #CBD9E8;
   --danger: #B4232A;
-  /* Couleurs de la marque de l'outil — distinctes de la charte Optimium, qui ne
-     s'applique qu'aux fiches produites. */
-  --mark-indigo: #3A1DB8;
-  --mark-purple: #7C5CF0;
-  --mark-blue:   #2E9BF5;
-  --mark-cyan:   #22C1E8;
+  /* La marque OPTIPROCESS reprend la palette de la charte : progression du bleu
+     marine vers le bleu clair, pastille de validation en vert. */
+  --mark-indigo: var(--navy);
+  --mark-step:   #1D6FAD;
+  --mark-blue:   var(--cyan);
+  --mark-valid:  var(--green);
   --radius: 8px;
   --topbar: 62px;
   --navbar: 68px;
@@ -66,12 +66,12 @@ button.big-btn { padding: 14px 28px; font-size: 16px; }
 }
 .brand { display: flex; align-items: center; gap: 11px; }
 .brand .marque { height: 38px; width: 38px; }
-/* Mot-symbole entre crochets, repris de la marque : crochets cyan, mot indigo. */
+/* Mot-symbole entre crochets, repris de la marque : crochets bleu clair, nom marine. */
 .mot {
-  font-size: 18px; font-weight: 700; letter-spacing: .06em;
-  color: var(--mark-cyan); white-space: nowrap;
+  font-size: 19px; font-weight: 700; letter-spacing: .05em;
+  color: var(--cyan); white-space: nowrap;
 }
-.mot em { font-style: normal; color: var(--mark-indigo); padding: 0 .18em; }
+.mot em { font-style: normal; color: var(--navy); padding: 0 .16em; letter-spacing: .08em; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
 
 .menu-wrap { position: relative; }
