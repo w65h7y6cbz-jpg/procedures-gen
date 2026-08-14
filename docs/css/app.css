@@ -163,6 +163,13 @@ textarea { resize: vertical; }
 .pill-cyan { background: var(--cyan); }
 .pill-green { background: var(--green); }
 
+/* ------------------------------------------------------- accueil en cadre */
+
+.accueil { max-width: 620px; }
+.accueil h1 { font-size: 22px; margin-bottom: 10px; }
+.marche { margin: 20px 0; padding-left: 22px; line-height: 1.9; }
+.marche strong { color: var(--navy); }
+
 /* -------------------------------------------------------------- capture */
 
 .shot {

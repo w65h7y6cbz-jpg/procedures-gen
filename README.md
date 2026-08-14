@@ -212,49 +212,46 @@ output/                  PDF générés et images de différence (non versionné
 
 ---
 
-## Publier l'outil pour l'équipe
+## Distribuer l'outil
 
-L'interface est un site statique : n'importe quel hébergement de fichiers convient.
+Le générateur tient dans un seul fichier : `dist/generateur-fiches-procedure.html`.
+Il s'envoie par Teams, par courriel ou se pose sur un partage réseau.
 
-### Azure Static Web Apps (retenu)
+**Chaque destinataire doit l'enregistrer sur son poste avant de l'ouvrir.** Ce n'est pas
+une précaution de confort : Teams, SharePoint et OneDrive affichent les fichiers HTML dans
+un cadre en bac à sable, par protection contre les scripts. Dans ce cadre, la saisie et
+l'aperçu fonctionnent, mais **le PDF ne peut pas en sortir** :
 
-Le dossier `docs/` est publié tel quel — rien à compiler. Mise en place, une seule fois :
-
-1. **Portail Azure** → *Créer une ressource* → **Static Web App** → offre **Free**.
-   Source : **GitHub**, dépôt `procedures-gen`, branche `main`.
-   Réglages de compilation : *Custom*, **App location** `docs`, **Api location** vide,
-   **Output location** vide.
-2. Azure ajoute automatiquement le secret `AZURE_STATIC_WEB_APPS_API_TOKEN` au dépôt.
-   S'il crée aussi son propre fichier de workflow, le supprimer : celui du dépôt
-   ([`azure-static-web-apps.yml`](.github/workflows/azure-static-web-apps.yml)) fait déjà le travail.
-3. Chaque push sur `main` republie le site. Une pull request obtient en plus un
-   environnement de pré-production, supprimé à la fermeture.
-
-[`docs/staticwebapp.config.json`](docs/staticwebapp.config.json) autorise l'affichage de la page
-**dans un cadre SharePoint, Office et Teams** (`frame-ancestors`) et met en cache les polices.
-Sans cet en-tête, l'intégration afficherait un cadre vide.
-
-### Autre hébergeur
-
-[`docs/_headers`](docs/_headers) porte les mêmes en-têtes au format Cloudflare Pages et Netlify :
-il suffit d'y publier `docs/` sans autre réglage. Pour GitHub Pages,
-[`pages.yml`](.github/workflows/pages.yml) est prêt — mais Pages n'est pas disponible sur un
-dépôt privé sans plan payant, et ne permet pas de choisir les en-têtes.
-
-### Intégrer dans SharePoint
-
-Une fois l'adresse obtenue, deux façons de la mettre à disposition :
-
-| | Comment | Remarque |
+| Voie de récupération | Dans le cadre d'aperçu | Pourquoi |
 |---|---|---|
-| **Un lien** *(le plus sûr)* | Page SharePoint → composant **Lien**, ou simple lien dans le menu du site | S'ouvre dans un onglet plein : toutes les fonctions marchent, y compris le téléchargement |
-| **Intégré dans la page** | Page SharePoint → composant **Incorporer** → coller l'adresse | Pratique, mais le cadre de SharePoint peut bloquer le téléchargement direct ; le bouton *Ouvrir dans un onglet* de l'aperçu sert alors de secours |
+| Téléchargement direct | ❌ sauf cadre permissif | il faut `allow-downloads` sur le cadre |
+| Ouverture dans un onglet | ❌ toujours | la fenêtre fille reçoit une origine isolée et ne peut pas lire le PDF |
+| Sauvegarde du brouillon | ❌ | stockage local refusé aux origines isolées |
 
-> ⚠️ **Ne pas déposer le fichier HTML dans une bibliothèque SharePoint pour l'ouvrir de là.**
-> SharePoint place volontairement les fichiers HTML d'une bibliothèque dans un bac à sable, par
-> protection contre les scripts. La saisie et l'aperçu fonctionnent, mais le brouillon n'est pas
-> conservé et le téléchargement reste souvent sans effet. L'interface détecte ce cas et l'affiche
-> en clair au lieu de le subir.
+Aucune de ces limites n'est contournable depuis la page : elles sont posées par le
+navigateur, sur consigne de l'hébergeur. L'interface **détecte le cas et l'annonce avant
+toute saisie**, avec la marche à suivre — plutôt que de laisser écrire une fiche entière
+pour la perdre à la fin.
+
+Ouvert depuis le poste, tout fonctionne : téléchargement du PDF, brouillon conservé,
+sans internet.
+
+### Si l'outil doit être accessible en ligne
+
+Une adresse web supprime la contrainte : la page est alors servie normalement et peut être
+liée, ou incorporée dans une page SharePoint ou un onglet Teams.
+
+- [`azure-static-web-apps.yml`](.github/workflows/azure-static-web-apps.yml) publie `docs/`
+  sur Azure Static Web Apps (offre gratuite). Le workflow ne s'active qu'une fois la
+  variable de dépôt `AZURE_PUBLICATION_ACTIVE` mise à `true`, pour ne pas échouer tant que
+  la ressource n'existe pas. App location : `docs`, rien à compiler.
+- [`docs/staticwebapp.config.json`](docs/staticwebapp.config.json) autorise l'affichage de
+  la page dans un cadre SharePoint, Office et Teams. Sans cet en-tête, l'incorporation
+  n'afficherait qu'un cadre vide.
+- [`docs/_headers`](docs/_headers) porte les mêmes en-têtes pour Cloudflare Pages et Netlify.
+
+Dans une page SharePoint, un **lien** est plus sûr qu'une **incorporation** : il ouvre
+l'outil en plein onglet, hors de tout cadre.
 
 ---
 

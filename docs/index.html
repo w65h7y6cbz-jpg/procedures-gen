@@ -57,6 +57,32 @@
   <iframe id="preview-frame" title="Aperçu du PDF"></iframe>
 </div>
 
+<!-- ------------------------------------------- écran d'accueil en cadre -->
+<template id="tpl-cadre">
+  <section class="screen accueil">
+    <h1>Ouvrez ce fichier depuis votre ordinateur</h1>
+    <p class="lead">
+      Vous utilisez le générateur dans l'aperçu de Teams, SharePoint ou OneDrive.
+      Cet aperçu empêche le navigateur d'enregistrer le PDF : vous risquez d'écrire
+      toute votre fiche sans pouvoir la récupérer.
+    </p>
+
+    <ol class="marche">
+      <li>Sur le fichier dans Teams, cliquez sur <strong>⋯</strong> puis <strong>Télécharger</strong>.</li>
+      <li>Ouvrez le fichier téléchargé (double-clic).</li>
+      <li>C'est tout. Gardez-le : il fonctionne hors ligne et se met à jour uniquement
+          quand on vous en envoie une nouvelle version.</li>
+    </ol>
+
+    <p class="lead">
+      Ouvert depuis votre ordinateur, tout fonctionne : le téléchargement du PDF et la
+      sauvegarde automatique de votre brouillon.
+    </p>
+
+    <button type="button" data-action="continuer" class="ghost">Continuer quand même</button>
+  </section>
+</template>
+
 <!-- ------------------------------------------------------------ écran 1 -->
 <template id="tpl-fiche">
   <section class="screen">

@@ -23,6 +23,7 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 let doc = normalise(emptyDoc());
 let screen = 0;                 // 0 = fiche, 1..n = étapes, n+1 = terminer
 let previewUrl = null;
+let accueilVu = false;          // écran d'avertissement affiché en cadre
 
 const stepCount = () => doc.etapes.length;
 const lastScreen = () => stepCount() + 1;
@@ -49,6 +50,15 @@ function status(message, kind = '') {
  * mais sans conservation du brouillon et souvent sans téléchargement direct :
  * mieux vaut le dire d'emblée que de perdre le travail de l'utilisateur.
  */
+/**
+ * Vrai quand la page tourne dans un cadre : aperçu de fichier Teams, SharePoint
+ * ou OneDrive. Ces cadres bloquent souvent le téléchargement direct — on passe
+ * alors par un nouvel onglet, où l'enregistrement fonctionne toujours.
+ */
+const estIntegre = (() => {
+  try { return window.self !== window.top; } catch { return true; }
+})();
+
 const stockageDisponible = (() => {
   try {
     localStorage.setItem('procedures-gen:test', '1');
@@ -106,10 +116,28 @@ function go(index) {
 /* ------------------------------------------------------------------ rendu */
 
 function render() {
-  renumber();
-  drawStepper();
   const host = $('#wizard');
   host.textContent = '';
+
+  // Dans un cadre d'aperçu, on prévient avant que l'utilisateur n'écrive sa fiche :
+  // le PDF n'y sera pas récupérable, et le prévenir après serait cruel.
+  if (estIntegre && !accueilVu) {
+    const node = $('#tpl-cadre').content.firstElementChild.cloneNode(true);
+    $('[data-action="continuer"]', node).addEventListener('click', () => {
+      accueilVu = true;
+      $('#avertissement').hidden = false;
+      render();
+    });
+    host.appendChild(node);
+    $('#stepper').hidden = true;
+    $('.navbar').hidden = true;
+    return;
+  }
+  $('#stepper').hidden = false;
+  $('.navbar').hidden = false;
+
+  renumber();
+  drawStepper();
   host.appendChild(
     screen === 0 ? buildFiche()
       : isStep() ? buildEtape(currentStep())
@@ -502,13 +530,16 @@ async function download() {
   status('Génération du PDF…');
   try {
     const bytes = await build();
+    if ($('#status').classList.contains('error')) return;
     saveFile(new Blob([bytes], { type: 'application/pdf' }), `${slugify(doc.titre)}.pdf`);
-    if (!$('#status').classList.contains('error')) {
-      status(stockageDisponible
-        ? 'PDF téléchargé.'
-        : 'PDF envoyé au téléchargement. S’il ne s’est rien passé, ouvrez « Voir le PDF » '
-          + 'et utilisez l’icône de téléchargement du lecteur.', 'ok');
-    }
+    // Certains cadres d'aperçu refusent l'enregistrement sans rien signaler, et
+    // aucune fenêtre annexe ne peut lire le PDF depuis une origine isolée : le
+    // seul recours honnête est de renvoyer l'utilisateur vers le fichier local.
+    status(estIntegre
+      ? 'PDF envoyé au téléchargement. S’il ne s’est rien passé, c’est l’aperçu de '
+        + 'Teams qui le bloque : enregistrez ce fichier sur votre ordinateur (⋯ → '
+        + 'Télécharger) et rouvrez-le, tout fonctionnera.'
+      : 'PDF téléchargé.', estIntegre ? '' : 'ok');
   } catch (error) {
     status(`La génération a échoué : ${error.message}`, 'error');
     console.error(error);
@@ -537,9 +568,9 @@ function bindActions() {
   $('#btn-pdf').addEventListener('click', download);
   $('#btn-close-preview').addEventListener('click', () => { $('#overlay').hidden = true; });
 
-  // Dernier recours quand le téléchargement direct est bloqué par un cadre bac à
-  // sable : le PDF s'ouvre dans un onglet, où le lecteur du navigateur permet de
-  // l'enregistrer et de l'imprimer.
+  // Utile hors cadre ; dans un aperçu en bac à sable la fenêtre fille reçoit une
+  // origine isolée et ne peut pas lire le PDF, d'où le masquage.
+  $('#btn-open-tab').hidden = estIntegre;
   $('#btn-open-tab').addEventListener('click', () => {
     if (previewUrl) window.open(previewUrl, '_blank');
   });
@@ -593,10 +624,8 @@ function fillPresets() {
   }
 }
 
-if (!stockageDisponible) {
-  $('#avertissement').hidden = false;
-  $('#btn-fermer-avertissement').addEventListener('click', () => { $('#avertissement').hidden = true; });
-}
+$('#btn-fermer-avertissement').addEventListener('click', () => { $('#avertissement').hidden = true; });
+if (!estIntegre && !stockageDisponible) $('#avertissement').hidden = false;
 
 loadDraft();
 fillPresets();
