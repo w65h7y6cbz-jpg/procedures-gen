@@ -235,6 +235,7 @@ function bindButtons(node, step) {
 async function build() {
   const prepared = await hydrate(JSON.parse(JSON.stringify(doc)));
   const { bytes, overflow } = await renderProcedure(prepared);
+  if (prepared.logoAvertissement) status(prepared.logoAvertissement, 'error');
   if (overflow.length) {
     const pages = overflow.map((o) => o.page).join(', ');
     status(`Attention : le contenu déborde du bas de page ${pages}. Raccourcissez le texte ou réduisez la capture.`, 'error');

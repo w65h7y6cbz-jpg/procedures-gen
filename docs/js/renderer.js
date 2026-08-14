@@ -135,9 +135,16 @@ function addLinkAnnotation(pdfDoc, page, rect, action) {
 
 function drawHeader(page, fonts, logoImage, badgeImage) {
   if (logoImage) {
+    // Le logo est inscrit dans son bloc sans déformation : un fichier de
+    // proportion différente est réduit et centré plutôt qu'étiré.
+    const box = HEADER.logo;
+    const scale = Math.min(box.width / logoImage.width, box.height / logoImage.height);
+    const width = logoImage.width * scale;
+    const height = logoImage.height * scale;
     page.drawImage(logoImage, {
-      x: HEADER.logo.x, y: flip(HEADER.logo.y + HEADER.logo.height),
-      width: HEADER.logo.width, height: HEADER.logo.height,
+      x: box.x + (box.width - width) / 2,
+      y: flip(box.y + (box.height + height) / 2),
+      width, height,
     });
   }
   const b = HEADER.badge;

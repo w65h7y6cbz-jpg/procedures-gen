@@ -196,14 +196,32 @@ async function rasteriseSvg(dataUrl, targetWidth = 1362) {
   return canvas.toDataURL('image/png');
 }
 
+/**
+ * Proportion du bloc logo dans la charte (164.40 × 46.75 pt). Un fichier dont la
+ * proportion s'en écarte nettement n'est pas le bloc complet — typiquement la
+ * marque seule, sans la baseline ni le « NC ». On le signale au lieu de le
+ * déformer silencieusement.
+ */
+const LOGO_RATIO = 164.40 / 46.75;
+const LOGO_RATIO_TOLERANCE = 0.05;
+
 async function loadLogo() {
   for (const candidate of LOGO_CANDIDATES) {
     try {
-      const dataUrl = await fetchAsDataUrl(candidate);
-      return candidate.endsWith('.svg') ? await rasteriseSvg(dataUrl) : dataUrl;
+      const raw = await fetchAsDataUrl(candidate);
+      const dataUrl = candidate.endsWith('.svg') ? await rasteriseSvg(raw) : raw;
+      const { width, height } = await measureImage(dataUrl);
+      const ratio = width / height;
+      const avertissement = Math.abs(ratio - LOGO_RATIO) / LOGO_RATIO > LOGO_RATIO_TOLERANCE
+        ? `Le logo ${candidate} a une proportion de ${ratio.toFixed(2)} là où la charte `
+          + `en attend ${LOGO_RATIO.toFixed(2)} : il s'agit probablement de la marque seule, `
+          + `sans la baseline ni le « NC ». Il est inséré sans déformation, mais l'en-tête `
+          + `ne sera pas conforme aux fiches existantes.`
+        : null;
+      return { dataUrl, avertissement };
     } catch { /* on essaie le candidat suivant */ }
   }
-  return null; // l'en-tête se dessine sans logo plutôt que d'échouer
+  return { dataUrl: null, avertissement: null }; // l'en-tête se dessine sans logo
 }
 
 /**
@@ -222,7 +240,11 @@ export async function hydrate(doc, contentBase = '') {
       Object.assign(capture, await measureImage(capture.dataUrl));
     }
   }
-  if (!doc.logo) doc.logo = await loadLogo();
+  if (!doc.logo) {
+    const { dataUrl, avertissement } = await loadLogo();
+    doc.logo = dataUrl;
+    if (avertissement) doc.logoAvertissement = avertissement;
+  }
   if (!doc.badge) {
     try { doc.badge = await fetchAsDataUrl('assets/badge_fiche_procedure.jpeg'); }
     catch { doc.badge = null; } // repli : le badge est alors tracé en vectoriel
