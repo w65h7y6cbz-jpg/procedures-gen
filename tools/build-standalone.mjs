@@ -61,6 +61,7 @@ async function main() {
   const assetPaths = [
     'fonts/DejaVuSans.ttf', 'fonts/DejaVuSans-Bold.ttf', 'fonts/DejaVuSans-Oblique.ttf',
     'assets/logo_optimium_nc.jpeg', 'assets/badge_fiche_procedure.jpeg',
+    'assets/icone.svg',
   ];
   const assets = Object.fromEntries(await Promise.all(
     assetPaths.map(async (p) => [p, await dataUri(`docs/${p}`)]),
@@ -68,9 +69,13 @@ async function main() {
 
   // Le corps de la page est repris tel quel : une seule définition de l'interface.
   const html = await readText('docs/index.html');
-  const body = html.slice(html.indexOf('<body>') + 6, html.lastIndexOf('</body>'))
-    .replace(/<script[\s\S]*?<\/script>/g, '')
-    .replace(/src="assets\/logo_optimium_nc\.jpeg"/, `src="${assets['assets/logo_optimium_nc.jpeg']}"`);
+  // Tout chemin d'asset cité dans le HTML est remplacé par son contenu embarqué :
+  // le fichier unique ne doit rien aller chercher à côté de lui.
+  let body = html.slice(html.indexOf('<body>') + 6, html.lastIndexOf('</body>'))
+    .replace(/<script[\s\S]*?<\/script>/g, '');
+  for (const [chemin, uri] of Object.entries(assets)) {
+    body = body.split(`"${chemin}"`).join(`"${uri}"`);
+  }
 
   const out = `<!DOCTYPE html>
 <html lang="fr">
@@ -78,6 +83,7 @@ async function main() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Générateur de fiches procédure — Optimium NC</title>
+<link rel="icon" type="image/svg+xml" href="${assets['assets/icone.svg']}">
 <style>
 ${css}
 </style>

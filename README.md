@@ -186,6 +186,19 @@ au prix d'un décalage visible si on compare avec une fiche ancienne.
 
 ---
 
+## Deux identités à ne pas confondre
+
+| | Où | Fichier |
+|---|---|---|
+| **Marque de l'outil** — cercle ouvert, nœuds en escalier, pastille de validation | icône d'onglet et en-tête de l'interface | [`docs/assets/icone.svg`](docs/assets/icone.svg), variante monochrome [`icone-mono.svg`](docs/assets/icone-mono.svg) |
+| **Charte Optimium NC** | uniquement dans les fiches produites | `docs/assets/logo_optimium_nc.jpeg`, `badge_fiche_procedure.jpeg` |
+
+La marque de l'outil **n'apparaît jamais dans les PDF** : les fiches restent à la charte
+Optimium, au point près. Le mot-symbole de l'en-tête se change dans
+[`docs/index.html`](docs/index.html), à la ligne `<span class="mot">`.
+
+---
+
 ## Remplacer le logo par un fichier source
 
 Le logo livré est extrait des PDF (JPEG 681 × 194), un peu juste pour l'impression. Déposer un
