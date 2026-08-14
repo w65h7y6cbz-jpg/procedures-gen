@@ -8,6 +8,7 @@
 
 import {
   COLORS, FONT_METRICS, PAGE, HEADER, TITLE, OPR, GRID, CARD, VALIDATION, FOOTER,
+  resolveAsset,
 } from './tokens.js';
 import { layoutDocument, wrapText, lineBox, baselineFromTop, labelIndent } from './layout.js';
 
@@ -33,7 +34,7 @@ async function loadFonts(pdfDoc, base = '') {
       italic:  `${base}fonts/DejaVuSans-Oblique.ttf`,
     };
     const entries = await Promise.all(Object.entries(files).map(async ([key, url]) => {
-      const response = await fetch(url);
+      const response = await fetch(resolveAsset(url));
       if (!response.ok) throw new Error(`Police introuvable : ${url}`);
       return [key, new Uint8Array(await response.arrayBuffer())];
     }));

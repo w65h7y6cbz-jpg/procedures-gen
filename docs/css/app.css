@@ -81,6 +81,9 @@ button.danger:hover { border-color: var(--danger); }
 .preview-empty {
   flex: 1; display: grid; place-items: center; color: var(--slate); padding: 40px; text-align: center;
 }
+/* « display: grid » l'emporte sur la règle par défaut de [hidden] : il faut le neutraliser
+   explicitement, sinon le message d'accueil reste visible sous l'aperçu. */
+.preview-empty[hidden] { display: none; }
 
 /* ------------------------------------------------------------- formulaire */
 

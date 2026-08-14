@@ -9,6 +9,13 @@
  * Ne rien coder en dur ailleurs : ce fichier est la seule source de vérité de la charte.
  */
 
+/**
+ * Résout un chemin d'asset. En version fichier unique, les polices et les images
+ * sont embarquées en data: URI et exposées dans window.__ASSETS ; le reste du code
+ * continue de faire un fetch() ordinaire, qui fonctionne aussi sur une data: URI.
+ */
+export const resolveAsset = (path) => (globalThis.__ASSETS && globalThis.__ASSETS[path]) || path;
+
 export const COLORS = {
   navy:       '#263F8B', // primaire
   cyan:       '#159FD0', // secondaire

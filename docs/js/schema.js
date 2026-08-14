@@ -37,6 +37,8 @@
  *     items: [ …, … ]         # variante : liste de points, répartie automatiquement
  */
 
+import { resolveAsset } from './tokens.js';
+
 export const CALLOUT_STYLES = [
   { value: 'info', label: 'Info (bleu clair)' },
   { value: 'important', label: 'Important (bleu marine)' },
@@ -165,7 +167,7 @@ export function measureImage(dataUrl) {
 }
 
 async function fetchAsDataUrl(url) {
-  const response = await fetch(url);
+  const response = await fetch(resolveAsset(url));
   if (!response.ok) throw new Error(`Capture introuvable : ${url}`);
   const blob = await response.blob();
   return readFileAsDataUrl(new File([blob], 'capture', { type: blob.type }));
@@ -206,7 +208,12 @@ const LOGO_RATIO = 164.40 / 46.75;
 const LOGO_RATIO_TOLERANCE = 0.05;
 
 async function loadLogo() {
-  for (const candidate of LOGO_CANDIDATES) {
+  // En version fichier unique, seuls les assets réellement embarqués sont
+  // interrogeables : inutile de tenter les autres, file:// les refuse bruyamment.
+  const candidats = globalThis.__ASSETS
+    ? LOGO_CANDIDATES.filter((c) => c in globalThis.__ASSETS)
+    : LOGO_CANDIDATES;
+  for (const candidate of candidats) {
     try {
       const raw = await fetchAsDataUrl(candidate);
       const dataUrl = candidate.endsWith('.svg') ? await rasteriseSvg(raw) : raw;

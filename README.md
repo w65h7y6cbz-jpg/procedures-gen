@@ -9,12 +9,22 @@ littéralement dans [`docs/js/tokens.js`](docs/js/tokens.js) — seule source de
 
 ---
 
-## Usage courant : la page web
+## Usage courant : l'interface
 
 L'interface tourne **entièrement dans le navigateur**. Aucune installation, aucun envoi de
 données : les captures d'écran et le PDF ne quittent jamais le poste.
 
-1. ouvrir la page publiée (GitHub Pages, cf. §Déploiement) ;
+Deux façons de l'ouvrir :
+
+| | Quand |
+|---|---|
+| **`dist/generateur-fiches-procedure.html`** — un seul fichier, double-clic | Toujours. Fonctionne sans serveur, sans internet, depuis un partage réseau ou une clé USB. C'est la voie recommandée tant que le dépôt est privé, GitHub Pages n'étant pas disponible sans plan payant. |
+| **GitHub Pages** | Si le dépôt passe public, ou avec un plan GitHub Pro. `Settings → Pages → Source : GitHub Actions`. |
+
+Le fichier unique est reconstruit par `npm run standalone` ; il embarque polices,
+bibliothèques, logo et badge, et pèse ~4 Mo.
+
+1. ouvrir l'interface (fichier unique ou page publiée) ;
 2. remplir le formulaire : titre, O/P/R, puis une carte par étape ;
 3. coller ou glisser les captures d'écran directement dans chaque étape ;
 4. **Aperçu** pour contrôler, **Télécharger le PDF** pour récupérer la fiche.
