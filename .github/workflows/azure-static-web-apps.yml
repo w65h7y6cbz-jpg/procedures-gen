@@ -1,0 +1,51 @@
+name: Publier l'interface sur Azure Static Web Apps
+
+# Publie le dossier docs/ tel quel : le générateur est un site statique, il n'y a
+# rien à compiler. Le jeton de déploiement est fourni par Azure à la création de
+# la ressource et se colle dans les secrets du dépôt sous le nom ci-dessous.
+#
+# La publication ne s'active qu'une fois la variable de dépôt
+# AZURE_PUBLICATION_ACTIVE mise à « true » (Settings → Secrets and variables →
+# Actions → Variables). Sans elle, ce workflow ne fait rien.
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', '.github/workflows/azure-static-web-apps.yml']
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+    paths: ['docs/**']
+  workflow_dispatch:
+
+jobs:
+  publier:
+    # Tant que la ressource Azure n'existe pas, le secret est absent : on passe le
+    # travail plutôt que de le faire échouer et de rendre la pull request rouge.
+    if: >-
+      (github.event_name != 'pull_request' || github.event.action != 'closed')
+      && vars.AZURE_PUBLICATION_ACTIVE == 'true'
+    runs-on: ubuntu-latest
+    name: Publier
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: docs
+          output_location: ''
+          skip_app_build: true
+
+  fermer:
+    if: >-
+      github.event_name == 'pull_request' && github.event.action == 'closed'
+      && vars.AZURE_PUBLICATION_ACTIVE == 'true'
+    runs-on: ubuntu-latest
+    name: Fermer l'environnement de pré-production
+    steps:
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close

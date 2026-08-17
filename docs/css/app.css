@@ -1,0 +1,259 @@
+/* Interface du générateur — palette de la charte (DESIGN_SYSTEM.md §2).
+   Assistant pas à pas : un seul écran à la fois, centré, peu d'éléments visibles. */
+
+:root {
+  --navy: #263F8B;
+  --cyan: #159FD0;
+  --green: #178653;
+  --ink: #14213D;
+  --slate: #5A6A80;
+  --bg-light: #F5F8FC;
+  --bg-accent: #EAF4FA;
+  --border: #CBD9E8;
+  --danger: #B4232A;
+  /* La marque OPTIPROCESS reprend la palette de la charte : progression du bleu
+     marine vers le bleu clair, pastille de validation en vert. */
+  --mark-indigo: var(--navy);
+  --mark-step:   #1D6FAD;
+  --mark-blue:   var(--cyan);
+  --mark-valid:  var(--green);
+  --radius: 8px;
+  --topbar: 62px;
+  --navbar: 68px;
+}
+
+* { box-sizing: border-box; }
+
+/* Un display explicite (flex, grid…) l'emporte sur la règle par défaut de [hidden].
+   On tranche une fois pour toutes plutôt que d'y repenser à chaque composant. */
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font: 15px/1.5 "DejaVu Sans", Verdana, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg-light);
+}
+
+button {
+  font: inherit; cursor: pointer; border-radius: var(--radius);
+  border: 1.25px solid var(--border); background: #fff; color: var(--ink);
+  padding: 9px 15px;
+}
+button:hover { border-color: var(--cyan); }
+button:disabled { opacity: .4; cursor: default; }
+button:disabled:hover { border-color: var(--border); }
+button.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+button.primary:hover:not(:disabled) { background: #1d3170; }
+button.ghost { background: var(--bg-accent); border-color: var(--cyan); color: var(--navy); }
+button.danger { color: var(--danger); }
+button.danger:hover { border-color: var(--danger); }
+button.icon { padding: 9px 13px; font-size: 17px; line-height: 1; }
+button.link {
+  border: 0; background: none; padding: 0; color: var(--cyan);
+  text-decoration: underline; font-size: inherit;
+}
+button.big-btn { padding: 14px 28px; font-size: 16px; }
+
+/* ------------------------------------------------------------- barre haute */
+
+.topbar {
+  height: var(--topbar);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 0 18px; border-bottom: 2.25px solid var(--cyan); background: #fff;
+}
+.brand { display: flex; align-items: center; gap: 11px; }
+.brand .marque { height: 38px; width: 38px; }
+/* Mot-symbole entre crochets, repris de la marque : crochets bleu clair, nom marine. */
+.mot {
+  font-size: 19px; font-weight: 700; letter-spacing: .05em;
+  color: var(--cyan); white-space: nowrap;
+}
+.mot em { font-style: normal; color: var(--navy); padding: 0 .16em; letter-spacing: .08em; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(20, 33, 61, .14); padding: 6px; min-width: 250px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.menu button { border: 0; text-align: left; border-radius: 5px; }
+.menu button:hover { background: var(--bg-accent); }
+
+/* ---------------------------------------------------- environnement dégradé */
+
+.avertissement {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 18px; font-size: 13px; line-height: 1.45;
+  background: #FFF6E5; border-bottom: 1px solid #E8CE9B; color: #6B4E12;
+}
+.avertissement > div { flex: 1; }
+.avertissement button { border: 0; background: none; padding: 2px 6px; color: inherit; }
+
+/* --------------------------------------------------------------- statuts */
+
+.status {
+  padding: 10px 18px; font-size: 13.5px;
+  background: var(--bg-accent); border-bottom: 1px solid var(--border); color: var(--navy);
+}
+.status.error { background: #FDEEEE; border-color: #E3B7B7; color: var(--danger); }
+.status.ok { background: #EAF6F0; border-color: #B6DCC8; color: var(--green); }
+
+/* ------------------------------------------------------------ progression */
+
+.stepper {
+  display: flex; gap: 6px; align-items: center; justify-content: center;
+  padding: 12px 18px; background: #fff; border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.stepper button {
+  border: 0; background: none; padding: 4px 3px; color: var(--slate);
+  font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  min-width: 34px;
+}
+.stepper button::before {
+  content: ''; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--border); transition: background .15s, transform .15s;
+}
+.stepper button.done::before { background: var(--cyan); }
+.stepper button.active::before { background: var(--navy); transform: scale(1.45); }
+.stepper button.active { color: var(--navy); font-weight: 700; }
+.stepper button:hover::before { background: var(--cyan); }
+
+/* --------------------------------------------------------------- écrans */
+
+main {
+  min-height: calc(100vh - var(--topbar) - var(--navbar) - 48px);
+  /* la barre du bas est collante : on réserve la place pour qu'elle ne masque rien */
+  padding: 30px 18px calc(var(--navbar) + 24px);
+}
+
+.screen {
+  max-width: 760px; margin: 0 auto;
+  background: #fff; border: 1px solid var(--border); border-top: 3px solid var(--cyan);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 26px 30px 30px;
+}
+.screen h1 { margin: 0 0 4px; font-size: 24px; color: var(--navy); }
+.lead { margin: 0 0 22px; color: var(--slate); font-size: 14px; }
+
+label { display: block; margin: 16px 0; font-size: 13.5px; color: var(--slate); }
+label.big { font-size: 14px; }
+label.inline {
+  display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 15px; margin: 18px 0;
+}
+label small { display: block; color: var(--slate); font-size: 12px; margin-top: 5px; }
+
+input[type="text"], textarea, select {
+  display: block; width: 100%; margin-top: 6px; font: inherit; color: var(--ink);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; background: #fff;
+}
+label.big input[type="text"] { font-size: 18px; padding: 12px 14px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--cyan); outline-offset: -1px; }
+textarea { resize: vertical; }
+
+.row { display: flex; gap: 14px; }
+.row > label.narrow { flex: 0 0 190px; }
+
+.opr { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 6px; }
+.pill {
+  display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
+  color: #fff; font-size: 10px; font-weight: 700; vertical-align: middle; margin-right: 6px;
+}
+.pill-navy { background: var(--navy); }
+.pill-cyan { background: var(--cyan); }
+.pill-green { background: var(--green); }
+
+/* ------------------------------------------------------- accueil en cadre */
+
+.accueil { max-width: 620px; }
+.accueil h1 { font-size: 22px; margin-bottom: 10px; }
+.marche { margin: 20px 0; padding-left: 22px; line-height: 1.9; }
+.marche strong { color: var(--navy); }
+
+/* -------------------------------------------------------------- capture */
+
+.shot {
+  position: relative; border: 2px dashed var(--border); border-radius: var(--radius);
+  background: var(--bg-light); padding: 14px; text-align: center; margin-bottom: 6px;
+  transition: border-color .15s, background .15s;
+}
+.shot:focus, .shot.over { outline: none; border-color: var(--cyan); background: var(--bg-accent); }
+.shot-empty { padding: 34px 10px; display: flex; flex-direction: column; gap: 8px; }
+.shot-empty strong { font-size: 17px; color: var(--navy); }
+.shot-empty span { color: var(--slate); font-size: 13.5px; }
+.shot img { display: block; max-width: 100%; max-height: 320px; margin: 0 auto; border: 1px solid var(--border); background: #fff; }
+.shot-tools { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.shot-tools button { padding: 6px 12px; font-size: 13px; }
+
+/* ------------------------------------------------------------ compléments */
+
+.extras { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.extra {
+  border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+  background: var(--bg-light); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 14px;
+}
+.extra-head {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+  font-size: 13px; font-weight: 700; color: var(--navy);
+}
+.extra-head > span { flex: 1; }
+.extra-head select { width: auto; margin: 0; flex: 0 0 auto; font-size: 13px; padding: 6px 8px; }
+.extra-head input { margin: 0; flex: 1; }
+.extra-head button.danger { padding: 4px 9px; }
+.extra > input[type="text"] { margin-bottom: 8px; }
+.extra label { margin: 8px 0; }
+
+/* ---------------------------------------------------------- page annexe */
+
+.annexe-aide { margin: 0 0 10px; font-size: 12.5px; color: var(--slate); line-height: 1.5; }
+.extra .shot { margin-bottom: 4px; }
+.extra .shot-empty { padding: 22px 10px; }
+.extra .shot-empty strong { font-size: 15px; }
+.extra .shot img { max-height: 220px; }
+
+.add-row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--slate);
+}
+.add-row button:not(.link) { padding: 6px 12px; font-size: 13px; }
+
+.finish { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------- barre du bas */
+
+.navbar {
+  position: sticky; bottom: 0; height: var(--navbar);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 18px; background: #fff; border-top: 1px solid var(--border);
+}
+.navbar-mid { display: flex; gap: 8px; }
+.navbar-mid button { font-size: 13px; padding: 7px 12px; }
+#btn-prev, #btn-next { min-width: 130px; }
+
+/* --------------------------------------------------------------- aperçu */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 40; background: rgba(20, 33, 61, .55);
+  display: flex; flex-direction: column; padding: 26px;
+}
+.overlay[hidden] { display: none; }
+.overlay-actions { display: flex; gap: 8px; }
+.overlay-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff; border-radius: var(--radius) var(--radius) 0 0;
+  padding: 10px 16px; font-weight: 700; color: var(--navy);
+}
+#preview-frame { flex: 1; width: 100%; border: 0; border-radius: 0 0 var(--radius) var(--radius); background: #fff; }
+
+@media (max-width: 700px) {
+  .screen { padding: 20px 16px 24px; }
+  .navbar-mid { display: none; }
+  .brand .badge { display: none; }
+}

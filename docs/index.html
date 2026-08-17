@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPTIPROCESS — Générateur de fiches procédure</title>
+<link rel="icon" type="image/svg+xml" href="assets/icone.svg">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="assets/icone.svg" alt="" class="marque">
+    <span class="mot">[<em>OPTIPROCESS</em>]</span>
+  </div>
+  <div class="topbar-actions">
+    <button type="button" id="btn-preview">Voir le PDF</button>
+    <button type="button" id="btn-pdf" class="primary">Télécharger</button>
+    <div class="menu-wrap">
+      <button type="button" id="btn-menu" class="icon" title="Autres actions" aria-haspopup="true">⋯</button>
+      <div id="menu" class="menu" hidden>
+        <button type="button" id="btn-import">Ouvrir une fiche enregistrée</button>
+        <button type="button" id="btn-export">Enregistrer la fiche</button>
+        <button type="button" id="btn-reset" class="danger">Tout effacer et recommencer</button>
+      </div>
+    </div>
+    <input type="file" id="file-yaml" accept=".yaml,.yml" hidden>
+  </div>
+</header>
+
+<div id="avertissement" class="avertissement" hidden>
+  <div>
+    <strong>Vous utilisez le générateur depuis un aperçu intégré</strong> (SharePoint, OneDrive,
+    Teams). La création de fiches fonctionne, mais <strong>votre brouillon ne sera pas conservé</strong>
+    si vous fermez l'onglet, et le bouton <em>Télécharger</em> peut rester sans effet — dans ce cas,
+    passez par <em>Voir le PDF</em> puis l'icône de téléchargement du lecteur.
+    <br>Pour un fonctionnement complet, enregistrez ce fichier sur votre poste et ouvrez-le de là.
+  </div>
+  <button type="button" id="btn-fermer-avertissement" title="Masquer">✕</button>
+</div>
+
+<div id="status" class="status" hidden></div>
+
+<nav id="stepper" class="stepper" aria-label="Progression"></nav>
+
+<main id="wizard"></main>
+
+<div id="overlay" class="overlay" hidden>
+  <div class="overlay-bar">
+    <span>Aperçu du PDF</span>
+    <span class="overlay-actions">
+      <button type="button" id="btn-open-tab">Ouvrir dans un onglet</button>
+      <button type="button" id="btn-close-preview">Fermer</button>
+    </span>
+  </div>
+  <iframe id="preview-frame" title="Aperçu du PDF"></iframe>
+</div>
+
+<!-- ------------------------------------------- écran d'accueil en cadre -->
+<template id="tpl-cadre">
+  <section class="screen accueil">
+    <h1>Ouvrez ce fichier depuis votre ordinateur</h1>
+    <p class="lead">
+      Vous utilisez le générateur dans l'aperçu de Teams, SharePoint ou OneDrive.
+      Cet aperçu empêche le navigateur d'enregistrer le PDF : vous risquez d'écrire
+      toute votre fiche sans pouvoir la récupérer.
+    </p>
+
+    <ol class="marche">
+      <li>Sur le fichier dans Teams, cliquez sur <strong>⋯</strong> puis <strong>Télécharger</strong>.</li>
+      <li>Ouvrez le fichier téléchargé (double-clic).</li>
+      <li>C'est tout. Gardez-le : il fonctionne hors ligne et se met à jour uniquement
+          quand on vous en envoie une nouvelle version.</li>
+    </ol>
+
+    <p class="lead">
+      Ouvert depuis votre ordinateur, tout fonctionne : le téléchargement du PDF et la
+      sauvegarde automatique de votre brouillon.
+    </p>
+
+    <button type="button" data-action="continuer" class="ghost">Continuer quand même</button>
+  </section>
+</template>
+
+<!-- ------------------------------------------------------------ écran 1 -->
+<template id="tpl-fiche">
+  <section class="screen">
+    <h1>La fiche</h1>
+    <p class="lead">De quoi parle cette procédure ? Ces informations apparaissent en haut de la première page.</p>
+
+    <label class="big">Titre de la procédure
+      <input type="text" data-doc="titre" placeholder="Remplacer un toner sur MFP Sharp" autocomplete="off">
+    </label>
+
+    <label>Sous-titre
+      <input type="text" data-doc="sousTitre" placeholder="Identification de la référence, remplacement et traçabilité." autocomplete="off">
+    </label>
+
+    <div class="opr">
+      <label><span class="pill pill-navy">O</span> Objectif — à quoi sert cette procédure ?
+        <textarea data-doc="objectif" rows="2" placeholder="Remplacer un toner vide et tracer l’intervention dans le BI."></textarea>
+      </label>
+      <label><span class="pill pill-cyan">P</span> Prérequis — ce qu'il faut avoir sous la main
+        <textarea data-doc="prerequis" rows="2" placeholder="BI ouvert dans CopyPark ; toner de remplacement en stock technicien."></textarea>
+      </label>
+      <label><span class="pill pill-green">R</span> Résultat — la situation une fois terminé
+        <textarea data-doc="resultat" rows="2" placeholder="Le toner est remplacé et le BI est clôturé."></textarea>
+      </label>
+    </div>
+  </section>
+</template>
+
+<!-- ------------------------------------------------------------ écran étape -->
+<template id="tpl-etape">
+  <section class="screen">
+    <h1 data-role="heading">Étape 1</h1>
+    <p class="lead">Collez la capture d'écran, puis expliquez ce qu'il faut faire.</p>
+
+    <div class="shot" data-role="shot" tabindex="0">
+      <div class="shot-empty" data-role="shot-empty">
+        <strong>Collez votre capture</strong>
+        <span>Ctrl + V, ou glissez une image ici, ou <button type="button" class="link" data-action="pick">choisissez un fichier</button></span>
+      </div>
+      <img data-role="thumb" alt="" hidden>
+      <div class="shot-tools" data-role="shot-tools" hidden>
+        <button type="button" data-action="pick">Remplacer</button>
+        <button type="button" data-action="clear" class="danger">Retirer</button>
+      </div>
+      <input type="file" data-role="file" accept="image/png,image/jpeg" hidden>
+    </div>
+
+    <label class="big">Titre de l'étape
+      <input type="text" data-step="titre" placeholder="Relever la référence du toner" autocomplete="off">
+    </label>
+
+    <label>Que faut-il faire ?
+      <textarea data-step="action" rows="3" placeholder="Ouvrir le BI dans CopyPark et relever le modèle de la machine, puis la référence exacte du toner."></textarea>
+    </label>
+
+    <label>Ce qu'on obtient à la fin de l'étape
+      <input type="text" data-step="resultat" placeholder="La référence du toner à commander est identifiée." autocomplete="off">
+    </label>
+
+    <div class="extras" data-role="extras"></div>
+
+    <div class="add-row">
+      <span>Ajouter :</span>
+      <button type="button" data-action="add-callout">un encadré</button>
+      <button type="button" data-action="add-exemple">un exemple</button>
+      <button type="button" data-action="add-lien">un lien</button>
+      <button type="button" data-action="add-bouton">un bouton</button>
+      <button type="button" data-action="add-annexe">une page annexe</button>
+      <button type="button" data-action="advanced" class="link">options avancées</button>
+    </div>
+  </section>
+</template>
+
+<!-- ------------------------------------------------------------ écran final -->
+<template id="tpl-fin">
+  <section class="screen">
+    <h1>Terminer</h1>
+    <p class="lead">Dernier bloc de la fiche, puis récupération du PDF.</p>
+
+    <label class="inline">
+      <input type="checkbox" data-role="validation-actif">
+      Afficher le bloc <strong>VALIDATION FINALE</strong> en bas de la fiche
+    </label>
+
+    <div data-role="validation-bloc">
+      <label>Les points à vérifier — une ligne de saisie = une ligne imprimée
+        <textarea data-role="validation-lignes" rows="4"
+          placeholder="Référence relevée | Toner remplacé | Sortie de stock saisie"></textarea>
+        <small>Séparez les points d'une même ligne par «&nbsp;|&nbsp;».</small>
+      </label>
+      <button type="button" data-action="suggest" class="ghost">Proposer à partir des étapes</button>
+    </div>
+
+    <div class="row">
+      <label class="narrow">Version
+        <input type="text" data-doc="version" autocomplete="off">
+      </label>
+      <label class="narrow">Date
+        <input type="text" data-doc="date" autocomplete="off">
+      </label>
+    </div>
+
+    <div class="finish">
+      <button type="button" data-action="download" class="primary big-btn">Télécharger le PDF</button>
+      <button type="button" data-action="preview" class="ghost big-btn">Voir le PDF</button>
+    </div>
+  </section>
+</template>
+
+<!-- ------------------------------------------------------------ fragments -->
+<template id="tpl-callout">
+  <div class="extra">
+    <div class="extra-head">
+      <select data-field="style">
+        <option value="info">Encadré bleu clair</option>
+        <option value="important">Encadré bleu marine (important)</option>
+      </select>
+      <input type="text" data-field="label" placeholder="POINT D’ARRÊT OBLIGATOIRE" list="callout-presets">
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+    <textarea data-field="texte" rows="2" placeholder="Texte de l'encadré"></textarea>
+  </div>
+</template>
+
+<template id="tpl-simple">
+  <div class="extra">
+    <div class="extra-head">
+      <span data-role="titre"></span>
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+    <textarea data-role="champ" rows="2"></textarea>
+  </div>
+</template>
+
+<template id="tpl-bouton">
+  <div class="extra">
+    <div class="extra-head">
+      <span>Bouton de navigation</span>
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+    <input type="text" data-field="texte" placeholder="CONTINUER VERS LA DEMANDE D’ACHAT">
+    <input type="text" data-field="cible" placeholder="numéro de l'étape visée (ex. 5), ou laisser vide">
+  </div>
+</template>
+
+<template id="tpl-annexe">
+  <div class="extra">
+    <div class="extra-head">
+      <span>Page annexe</span>
+      <button type="button" data-action="remove" class="danger" title="Retirer">✕</button>
+    </div>
+    <p class="annexe-aide">
+      Collez ici la capture de la page à joindre. Elle est ajoutée en pleine page à la fin
+      de la fiche, et le bouton ci-dessous y renvoie d'un clic.
+    </p>
+
+    <div class="shot" data-role="shot" tabindex="0">
+      <div class="shot-empty" data-role="shot-empty">
+        <strong>Collez la page à joindre</strong>
+        <span>Ctrl + V, ou glissez une image ici, ou <button type="button" class="link" data-action="pick">choisissez un fichier</button></span>
+      </div>
+      <img data-role="thumb" alt="" hidden>
+      <div class="shot-tools" data-role="shot-tools" hidden>
+        <button type="button" data-action="pick">Remplacer</button>
+        <button type="button" data-action="clear" class="danger">Retirer l'image</button>
+      </div>
+      <input type="file" data-role="file" accept="image/png,image/jpeg" hidden>
+    </div>
+
+    <label>Texte du bouton
+      <input type="text" data-field="texte" placeholder="VOIR COMMENT VÉRIFIER LA GARANTIE">
+    </label>
+    <label>Titre de la page annexe
+      <input type="text" data-field="titre" placeholder="Vérifier la garantie HP">
+    </label>
+  </div>
+</template>
+
+<template id="tpl-advanced">
+  <div class="extra">
+    <div class="extra-head">
+      <span>Options avancées</span>
+      <button type="button" data-action="remove" class="danger" title="Fermer">✕</button>
+    </div>
+    <label>Numéro affiché sur la pastille
+      <input type="text" data-field="numero" placeholder="1, ou H1 / L2 pour une branche">
+    </label>
+    <label>Sous-titre de la page où commence cette étape
+      <input type="text" data-field="sousTitre">
+    </label>
+  </div>
+</template>
+
+<datalist id="callout-presets"></datalist>
+
+<footer class="navbar">
+  <button type="button" id="btn-prev">‹ Précédent</button>
+  <div class="navbar-mid">
+    <button type="button" id="btn-add-step" class="ghost">+ Ajouter une étape</button>
+    <button type="button" id="btn-del-step" class="danger">Supprimer cette étape</button>
+  </div>
+  <button type="button" id="btn-next" class="primary">Suivant ›</button>
+</footer>
+
+<script src="js/vendor/pdf-lib.min.js"></script>
+<script src="js/vendor/fontkit.umd.min.js"></script>
+<script src="js/vendor/js-yaml.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

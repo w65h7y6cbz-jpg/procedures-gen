@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="OPTIPROCESS">
+  <!--
+    Variante monochrome de la marque — un cercle ouvert (le processus en cours), trois nœuds reliés
+    en équerre (les étapes qui s'enchaînent) et une pastille de validation (l'étape
+    vérifiée). Tout est vectoriel : net de l'icône d'onglet à l'impression.
+    Les connecteurs partent du bord d'un nœud et rejoignent le bord du suivant, pour
+    que l'escalier reste lisible même réduit.
+  -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- cercle ouvert : trois arcs, les ruptures marquées par deux points -->
+    <g stroke="#14213D" stroke-width="8">
+      <path d="M 95.0 32.0 A 45 45 0 0 1 78.5 105.5" />
+      <path d="M 65.0 107.5 A 45 45 0 0 1 24.5 41.0" />
+      <path d="M 34.5 28.0 A 45 45 0 0 1 46.5 21.0" />
+    </g>
+    <circle cx="26.0" cy="33.0" r="4.5" fill="#14213D" />
+    <circle cx="72.0" cy="112.0" r="4.5" fill="#14213D" />
+
+    <!-- escalier : chaque segment relie le bord d'un nœud au bord du suivant -->
+    <path d="M 44 92 H 56 V 79" stroke="#14213D" stroke-width="7" />
+    <path d="M 63 70 H 78 V 56" stroke="#14213D" stroke-width="7" />
+    <path d="M 87 47 H 94 V 41" stroke="#14213D" stroke-width="7" />
+  </g>
+
+  <!-- nœuds : étape franchie, étape en cours, étape suivante -->
+  <circle cx="35" cy="92" r="10" fill="#14213D" />
+  <circle cx="56" cy="70" r="8.5" fill="#14213D" />
+  <circle cx="78" cy="47" r="10" fill="#14213D" />
+
+  <!-- pastille de validation -->
+  <circle cx="99" cy="30" r="18" fill="#14213D" />
+  <path d="M 90 30.5 L 96.5 37 L 108 24" fill="none" stroke="#FFFFFF"
+        stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
